@@ -1,0 +1,22 @@
+<!--
+context = {
+    "title": title,
+    "artist": artist,
+    "album": album,
+    "img_src": img_src,
+}
+-->
+
+<div style="position: relative">
+    <img class="artwork" src="{{img_src | image_proxy}}">
+    {% if transport != "PLAYING" %}
+    <i class="fas fa-pause fa-7x"
+       style="position: absolute; top: 50%; right: 50%; transform: translate(50%,-50%); opacity: 0.8;"></i>
+    {% elif volume == 0 %}
+    <i class="fas fa-volume-mute fa-7x"
+       style="position: absolute; top: 50%; right: 50%; transform: translate(50%,-50%); opacity: 0.8;"></i>
+    {% endif%}
+</div>
+<div class="title">{{title}}</div>
+<div class="artist">{{artist}} ● {{album}}</div>
+
