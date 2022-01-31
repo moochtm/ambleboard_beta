@@ -1,4 +1,5 @@
 import asyncio
+import base64
 import hashlib
 import importlib
 import json
@@ -13,15 +14,17 @@ from urllib.parse import quote_plus
 
 import aiofiles
 import aiohttp
+from aiohttp import web, ClientSession
 import aiohttp_jinja2
+from aiohttp_session import setup, new_session, get_session  # , session_middleware
+from aiohttp_session.cookie_storage import EncryptedCookieStorage
+from aiohttp_sse import sse_response
 import jinja2
-from aiohttp import web
 
-import src.widgets
 
 # SET UP LOGGING
 logging.basicConfig(
-    format="%(asctime)s | %(levelname)-7s | %(name)-25s: %(message)s",
+    format="%(asctime)s | %(levelname)-7s | %(name)-30s: %(message)s",
     level=logging.INFO,
     datefmt="%H:%M:%S",
 )
@@ -54,11 +57,15 @@ class Server:
         """
         Starts the web server.
         """
-        self.app = self._init_app()
         logger.info(f"Server starting on {self.protocol}://{self.host}:{self.port}")
+
+        self.app = self._init_app()
+
+        # IF PROTOCOL IS HTTP
         if self.http:
             web.run_app(self.app, host=self.host, port=self.port)
             return
+        # IF PROTOCOL IS HTTPS
         else:
             ssl_context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
             ssl_context.load_cert_chain("domain_srv.crt", "domain_srv.key")
@@ -71,15 +78,29 @@ class Server:
         Initializes the web application.
         """
         app = web.Application()
-        app["websockets"] = {}
+        app["subscriptions"] = {}
+
+        # SESSION SUPPORT INIT
+        # secret_key must be 32 url-safe base64-encoded bytes
+        # TODO - store below in env, generate if doesn't already exist.
+        fernet_key = b"wqEqfPTJJin1Q3YRPBwWy8JGZuXqL_vFJwDzSFh__Wk="  # fernet.Fernet.generate_key()
+        secret_key = base64.urlsafe_b64decode(fernet_key)
+        setup(app, EncryptedCookieStorage(secret_key))
+
+        # APP SIGNALS INIT
         app.on_shutdown.append(self._shutdown_app)
+
+        # JINJA INIT
         jinja2_filters = {"image_proxy": self._get_image_proxy_url}
         aiohttp_jinja2.setup(
             app, loader=jinja2.PackageLoader("src", "templates"), filters=jinja2_filters
         )
-        app.router.add_get("/board/{name}", self.board_handler)
-        app.router.add_get("/ws", self.websocket_handler)
-        app.router.add_get("/image_proxy", self.image_proxy_handler)
+
+        # APP ROUTING INIT
+        app.router.add_get("/board/{board_name}", self._board_handler)
+        app.router.add_get("/subscribe", self._subscription_handler)
+        app.router.add_post("/widget", self._widget_handler)
+        app.router.add_get("/image_proxy", self._image_proxy_handler)
         app.router.add_static("/static/", path=PROJECT_ROOT / "static", name="static")
         app.router.add_static(
             "/widgets/", path=PROJECT_ROOT / "widgets", name="widgets"
@@ -90,9 +111,7 @@ class Server:
         """
         Called when the app shut downs. Perform clean-up.
         """
-        for ws in app["websockets"].values():
-            await ws.close()
-        app["websockets"].clear()
+        logger.info("Server shutting down.")
 
     def _get_protocol(self):
         if self.http:
@@ -100,36 +119,49 @@ class Server:
         else:
             return "https"
 
-    async def board_handler(self, request):
+    async def _board_handler(self, request):
         """
         Handles returning the main html for the requested board.
         """
-        name = request.match_info["name"]
-        return aiohttp_jinja2.render_template(f"{name}.html", request, {})
+        board_name = request.match_info["board_name"]
+        return aiohttp_jinja2.render_template(f"{board_name}.html", request, {})
 
-    async def websocket_handler(self, request):
+    async def _subscription_handler(self, request):
         """
-        Handles web socket connections
+        Handles SSE subscriptions.
         """
-        ws_current = web.WebSocketResponse()
-        ws_ready = ws_current.can_prepare(request)
-        logger.debug(ws_ready)
-        await ws_current.prepare(request)
+        async with sse_response(request) as response:
 
-        ws_identifier = str(uuid.uuid4())[:8]
-        request.app["websockets"][ws_identifier] = {"ws": ws_current}
-        logger.info(f"Client {ws_identifier} connected.")
+            subscription_id = "$" + str(uuid.uuid4())[:8]
 
-        while True:
-            msg = await ws_current.receive()
-            if msg.type != aiohttp.WSMsgType.TEXT:
-                break
-            await self._handle_message(request, ws_identifier, msg)
-            await asyncio.sleep(0)
-        self._remove_ws(request, ws_identifier)
-        return ws_current
+            # create queue and send initial message (to ensure "opened" event in client)
+            queue = asyncio.Queue()
+            await queue.put(subscription_id)
 
-    async def image_proxy_handler(self, request):
+            # store session queue and widgets list
+            widgets = []
+            request.app["subscriptions"][subscription_id] = {
+                "queue": queue,
+                "widgets": widgets,
+            }
+            try:
+                while not response.task.done():
+                    payload = await queue.get()
+                    logger.info(
+                        f"Subscription {subscription_id}: sending payload: {payload}"
+                    )
+                    await response.send(payload)
+                    queue.task_done()
+            finally:
+                # when disconnected, cancel widget tasks
+                for widget in widgets:
+                    logger.info("Cancelling widget.")
+                    widget.cancel()
+                del request.app["subscriptions"][subscription_id]
+                logger.info(f"Goodbye, subscription {subscription_id}!")
+        return response
+
+    async def _image_proxy_handler(self, request):
         """
         Handles /image_proxy requests.
         Requests always come in in form /image_proxy?url=image_url
@@ -153,7 +185,7 @@ class Server:
                 os.remove(fp)
 
         # Now focus on the requested file
-        async with aiohttp.ClientSession() as session:
+        async with ClientSession() as session:
             url = params["url"]
             url_hash = hashlib.sha1(url.encode("UTF-8")).hexdigest()
             fp = os.path.join(dp, url_hash + ".jpeg")
@@ -171,64 +203,36 @@ class Server:
         url_param = quote_plus(url)
         return f"{self.protocol}://{self.host}:{self.port}/image_proxy?url={url_param}"
 
-    def _remove_ws(self, request, ws_identifier):
+    async def _widget_handler(self, request):
         """
-        Removes web socket from list stored by server
+        Handles requests to initialise a widget
         """
-        logger.info(f"Client {ws_identifier} disconnected.")
-        del request.app["websockets"][ws_identifier]
 
-    async def send_message(self, data_dict, request, ws_identifier, html):
-        try:
-            ws = request.app["websockets"][ws_identifier]["ws"]
-        except KeyError:
-            return
-        try:
-            await ws.send_json(
-                {
-                    "target": f"#{data_dict['target']}",
-                    "action": "refresh",
-                    "data": html,
-                }
-            )
-        except ConnectionResetError:
-            self._remove_ws(request, ws_identifier)
+        data_dict = await request.json()
 
-    async def _handle_message(self, request, ws_identifier, msg):
-        """
-        Handles messages coming in from web socket connections.
-        Routes actions after checking data in msg is compliant.
-        Gets HTML response back from widget.
-        Sends HTML back to client.
-        """
-        if msg.type != aiohttp.WSMsgType.TEXT:
-            return
-        data_dict = json.loads(msg.data)
-        logger.info(f"Msg from client {ws_identifier}: {data_dict}")
         if "data-widget" not in data_dict:
             logger.warning("No data-widget entry in msg data.")
             return
         if "target" not in data_dict:
             logger.warning("No target entry in msg data.")
             return
-        if "widgets" not in request.app["websockets"][ws_identifier]:
-            request.app["websockets"][ws_identifier]["widgets"] = {}
+        if "subscription_id" not in data_dict:
+            logger.warning("No subscription_id entry in msg data.")
+            return
+        logger.info(f"Message: {data_dict}")
 
+        # lazy load widget module
         widget_module = importlib.import_module(
             f".{data_dict['data-widget']}.{data_dict['data-widget']}",
             package="src.widgets",
         )
 
-        if (
-            data_dict["data-widget"]
-            not in request.app["websockets"][ws_identifier]["widgets"]
-        ):
-            request.app["websockets"][ws_identifier]["widgets"][
-                data_dict["target"]
-            ] = widget_module.Widget()
-            await request.app["websockets"][ws_identifier]["widgets"][
-                data_dict["target"]
-            ].init(data_dict, request, ws_identifier, self.send_message)
-        else:
-            logger.info("widget already exists")
-        return
+        # get queue
+        queue = request.app["subscriptions"][data_dict["subscription_id"]]["queue"]
+        # add widget instance to session widgets
+        request.app["subscriptions"][data_dict["subscription_id"]]["widgets"].append(
+            asyncio.ensure_future(
+                widget_module.Widget(request=request, queue=queue, **data_dict).start()
+            )
+        )
+        return web.Response(status=200)

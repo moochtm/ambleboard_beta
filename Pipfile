@@ -10,6 +10,11 @@ aiohttp-jinja2 = "*"
 soco = "*"
 aiofiles = "*"
 typing-extensions = "*"
+aiohttp-sse = "*"
+pypubsub = "*"
+aiohttp-session = "*"
+cryptography = "*"
+aiopubsub = "*"
 
 [dev-packages]
 
