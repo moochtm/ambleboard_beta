@@ -16,8 +16,6 @@ import aiofiles
 import aiohttp
 from aiohttp import web, ClientSession
 import aiohttp_jinja2
-from aiohttp_session import setup, new_session, get_session  # , session_middleware
-from aiohttp_session.cookie_storage import EncryptedCookieStorage
 from aiohttp_sse import sse_response
 import jinja2
 
@@ -79,13 +77,6 @@ class Server:
         """
         app = web.Application()
         app["subscriptions"] = {}
-
-        # SESSION SUPPORT INIT
-        # secret_key must be 32 url-safe base64-encoded bytes
-        # TODO - store below in env, generate if doesn't already exist.
-        fernet_key = b"wqEqfPTJJin1Q3YRPBwWy8JGZuXqL_vFJwDzSFh__Wk="  # fernet.Fernet.generate_key()
-        secret_key = base64.urlsafe_b64decode(fernet_key)
-        setup(app, EncryptedCookieStorage(secret_key))
 
         # APP SIGNALS INIT
         app.on_shutdown.append(self._shutdown_app)

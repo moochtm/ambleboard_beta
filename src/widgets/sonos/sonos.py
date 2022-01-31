@@ -13,6 +13,9 @@ logger = logging.getLogger(__name__)
 
 soco.config.EVENTS_MODULE = events_asyncio
 
+# TODO: get metadata for next in queue
+# TODO: trigger next image being downloaded using hidden img tag
+
 
 class Widget(BaseWidget):
     widget_name = "SONOS"
