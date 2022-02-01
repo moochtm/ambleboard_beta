@@ -103,6 +103,7 @@ class Server:
         Called when the app shut downs. Perform clean-up.
         """
         logger.info("Server shutting down.")
+        # TODO finish shutdown / cleanup code. E.g. shutdown all Sonos subscriptions?
 
     def _get_protocol(self):
         if self.http:
