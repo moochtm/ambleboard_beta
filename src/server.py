@@ -177,11 +177,14 @@ class Server:
                 os.remove(fp)
 
         # Now focus on the requested file
+        # TODO: Find a way to stop concurrent downloads caused by multiple GETs in small time window.
+        #   e.g. a lock file?
         async with ClientSession() as session:
             url = params["url"]
             url_hash = hashlib.sha1(url.encode("UTF-8")).hexdigest()
             fp = os.path.join(dp, url_hash + ".jpeg")
             if not os.path.exists(fp):
+                logger.info(f"Image Proxy downloading image: url={url}, path={fp}")
                 async with session.get(url) as resp:
                     if resp.status == 200:
                         fp = os.path.join(dp, url_hash + ".jpeg")
@@ -189,6 +192,7 @@ class Server:
                             await f.write(await resp.read())
                             await f.close()
             resp = web.FileResponse(fp)
+            logger.info(f"Image Proxy sending image: url={url}, path={fp}")
             return resp
 
     def _get_image_proxy_url(self, url):
