@@ -197,7 +197,7 @@ class Server:
 
     def _get_image_proxy_url(self, url):
         url_param = quote_plus(url)
-        return f"{self.protocol}://{self.host}:{self.port}/image_proxy?url={url_param}"
+        return f"{self.protocol}://{self.host}:{self.port}/image_proxy?url={quote_plus(url)}"
 
     async def _widget_handler(self, request):
         """

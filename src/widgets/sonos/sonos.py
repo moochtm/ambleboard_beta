@@ -13,9 +13,6 @@ logger = logging.getLogger(__name__)
 
 soco.config.EVENTS_MODULE = events_asyncio
 
-# TODO: get metadata for next in queue
-# TODO: trigger next image being downloaded using hidden img tag
-
 
 class Widget(BaseWidget):
     widget_name = "SONOS"
@@ -36,51 +33,41 @@ class Widget(BaseWidget):
         # Below depends on the publisher details
         publish_key = aiopubsub.Key(device.player_name)
 
-        def event_handler(event):
-            logger.info(f"SONOS event received: device={device.player_name}")
-            transport_info = device.get_current_transport_info()
-            logger.debug(f"transport info: {transport_info}")
-            track_info = device.get_current_track_info()
-            logger.debug(f"track info: {track_info}")
-            media_info = device.get_current_media_info()
-            logger.debug(f"media info: {media_info}")
-            volume = device.volume
-            logger.debug(f"volume: {volume}")
+        context = {"av_transport": {}, "rendering_control": {}}
 
-            transport = transport_info["current_transport_state"]
-            img_src = track_info["album_art"]
-            if img_src != "":
-                title = track_info["title"]
-                artist = track_info["artist"]
-                album = track_info["album"]
-            # if there's no img_src in track info, we might be playing a radio station
-            else:
-                channel = media_info["channel"]
-                tunein = MusicService("TuneIn")
-                # search Tunein for value of channel
-                results = tunein.search(category="stations", term=channel)
-                if len(results) > 0:
-                    result = results[0]
-                    img_src = result.metadata["stream_metadata"].metadata["logo"]
-                title = channel
-                artist = ""
-                album = ""
-            # create context dict
-            context = {
-                "transport": transport,
-                "title": title,
-                "artist": artist,
-                "album": album,
-                "img_src": img_src,
-                "volume": int(volume),
-            }
+        def av_transport_event_handler(event):
+            logger.info(
+                f"SONOS av_transport event received: device={device.player_name}, event.variables={event.variables}"
+            )
+            context["av_transport"] = event.variables
+            # convert values that are soco.data_structures (e.g. music track metadata) to dicts
+            for key, value in context["av_transport"].items():
+                if "soco.data_structures" in str(type(value)):
+                    context["av_transport"][key] = value.to_dict()
+                    if "album_art_uri" in context["av_transport"][key]:
+                        context["av_transport"][key][
+                            "album_art_uri"
+                        ] = f"http://{device.ip_address}:1400{context['av_transport'][key]['album_art_uri']}"
+
+            print(context)
+
+            publisher.publish(publish_key, context)
+            type(self).worker_prev_update[str(publisher.prefix + publish_key)] = context
+
+        def rendering_control_event_handler(event):
+            logger.info(
+                f"SONOS rendering_control event received: device={device.player_name}, event.variables={event.variables}"
+            )
+            context["rendering_control"] = event.variables
+            print(context)
+
             publisher.publish(publish_key, context)
             type(self).worker_prev_update[str(publisher.prefix + publish_key)] = context
 
         sub = await device.avTransport.subscribe()
-        sub.callback = event_handler
+        sub.callback = av_transport_event_handler
         rendering_sub = await device.renderingControl.subscribe()
-        rendering_sub.callback = event_handler
+        rendering_sub.callback = rendering_control_event_handler
 
         while True:
             await asyncio.sleep(0)

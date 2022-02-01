@@ -31,13 +31,16 @@ context = {
     }
 </style>
 <div style="position: relative">
-    <img class="artwork" src="{{img_src | image_proxy}}">
-    {% if transport != "PLAYING" %}
+    <img class="artwork" src="{{av_transport.current_track_meta_data.album_art_uri | image_proxy}}">
+    {% if av_transport.next_track_meta_data.album_art_uri is defined %}
+    <img style="position:absolute; left: 0px; top: 0px; width: 1px; height: 1px" class="artwork" src="{{av_transport.next_track_meta_data.album_art_uri | image_proxy}}">
+    {% endif %}
+    {% if av_transport.transport_state != "PLAYING" %}
     <i class="fas fa-pause fa-5x icon"></i>
-    {% elif volume == 0 %}
+    {% elif rendering_control.volume.Master == '0' %}
     <i class="fas fa-volume-mute fa-5x icon"></i>
-    {% endif%}
+    {% endif %}
 </div>
-<div class="title">{{title}}</div>
-<div class="artist">{{artist}} ● {{album}}</div>
+<div class="title">{{av_transport.current_track_meta_data.title}}</div>
+<div class="artist">{{av_transport.current_track_meta_data.creator}} ● {{av_transport.current_track_meta_data.album}}</div>
 

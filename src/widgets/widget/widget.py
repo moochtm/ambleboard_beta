@@ -3,6 +3,7 @@ import json
 import logging
 import aiopubsub
 import aiohttp_jinja2
+import traceback
 
 logger = logging.getLogger(__name__)
 
@@ -50,8 +51,9 @@ class Widget:
                 html = aiohttp_jinja2.render_string(
                     f"{self._template}.html", self._request, arg
                 )
-            except:
+            except Exception as e:
                 html = "<p>Widget could not be rendered!</p>"
+                traceback.print_exc()
                 logger.error("Widget could not be rendered!")
             payload = {
                 "target": self._target,
