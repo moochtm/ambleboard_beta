@@ -44,25 +44,35 @@ class Widget(BaseWidget):
             for key, value in context["av_transport"].items():
                 if "soco.data_structures" in str(type(value)):
                     context["av_transport"][key] = value.to_dict()
-                    # create FULL uri for album art
+                    # create FULL uri for album art (if 'http' not found in current value).
                     if "album_art_uri" in context["av_transport"][key]:
-                        context["av_transport"][key][
-                            "album_art_uri"
-                        ] = f"http://{device.ip_address}:1400{context['av_transport'][key]['album_art_uri']}"
+                        if (
+                            context["av_transport"][key]["album_art_uri"][:4] != "http"
+                            and context["av_transport"][key]["album_art_uri"].strip()
+                            != ""
+                        ):
+                            context["av_transport"][key][
+                                "album_art_uri"
+                            ] = f"http://{device.ip_address}:1400{context['av_transport'][key]['album_art_uri']}"
 
             # helper: add current_track_exists:
             context["av_transport"]["current_track_exists"] = (
                 False
-                if context["av_transport"]["current_track_meta_data"]["title"] == " "
+                if context["av_transport"]["current_track_meta_data"]["title"].strip()
+                == ""
                 else True
             )
 
             # helper: add next_track_exists:
             context["av_transport"]["next_track_exists"] = (
-                False if context["av_transport"]["next_track_meta_data"] == "" else True
+                False
+                if context["av_transport"]["next_track_meta_data"] == ""
+                or context["av_transport"]["next_track_meta_data"]["title"].strip()
+                == ""
+                else True
             )
 
-            print(context)
+            logger.info(f"Sonos Created context: {context}")
 
             publisher.publish(publish_key, context)
             type(self).worker_prev_update[str(publisher.prefix + publish_key)] = context

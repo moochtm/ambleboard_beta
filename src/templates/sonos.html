@@ -35,7 +35,7 @@ context = {
 {% if av_transport.current_track_exists %}
 <div style="position: relative">
     <img class="artwork" src="{{av_transport.current_track_meta_data.album_art_uri | image_proxy}}">
-    {% if av_transport.next_track_meta_data.album_art_uri is defined %}
+    {% if av_transport.next_track_exists %}
     <img style="position:absolute; left: 0px; top: 0px; width: 1px; height: 1px" class="artwork"
          src="{{av_transport.next_track_meta_data.album_art_uri | image_proxy}}">
     {% endif %}

@@ -88,6 +88,7 @@ class Server:
         )
 
         # APP ROUTING INIT
+        # TODO: add route and handler to return links to all boards
         app.router.add_get("/board/{board_name}", self._board_handler)
         app.router.add_get("/subscribe", self._subscription_handler)
         app.router.add_post("/widget", self._widget_handler)
