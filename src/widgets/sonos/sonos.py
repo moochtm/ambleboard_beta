@@ -72,14 +72,14 @@ class Widget(BaseWidget):
                 f"SONOS rendering_control event received: device={device.player_name}, event.variables={event.variables}"
             )
             context["rendering_control"] = event.variables
-            print(context)
+            logging.debug(f"Created context: {context}")
 
             publisher.publish(publish_key, context)
             type(self).worker_prev_update[str(publisher.prefix + publish_key)] = context
 
-        sub = await device.avTransport.subscribe()
+        sub = await device.avTransport.subscribe(auto_renew=True)
         sub.callback = av_transport_event_handler
-        rendering_sub = await device.renderingControl.subscribe()
+        rendering_sub = await device.renderingControl.subscribe(auto_renew=True)
         rendering_sub.callback = rendering_control_event_handler
 
         while True:

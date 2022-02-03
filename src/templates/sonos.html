@@ -10,6 +10,7 @@ context = {
 
 <style>
     .artwork {
+        width: 100%;
         max-width: 100%;
         border-radius: .3em;
         box-shadow: 2px 2px 0px rgba(0,0,0,.3);
@@ -29,21 +30,26 @@ context = {
         margin-top: 0.3em;
         opacity: 0.5;
     }
+
 </style>
 {% if av_transport.current_track_exists %}
 <div style="position: relative">
-        <img class="artwork" src="{{av_transport.current_track_meta_data.album_art_uri | image_proxy}}">
-        {% if av_transport.next_track_meta_data.album_art_uri is defined %}
-                <img style="position:absolute; left: 0px; top: 0px; width: 1px; height: 1px" class="artwork" src="{{av_transport.next_track_meta_data.album_art_uri | image_proxy}}">
-        {% endif %}
-        {% if av_transport.transport_state != "PLAYING" %}
-                <i class="fas fa-pause fa-5x icon"></i>
-        {% elif rendering_control.volume is defined and rendering_control.volume.Master == '0' %}
-                <i class="fas fa-volume-mute fa-5x icon"></i>
-        {% endif %}
+    <img class="artwork" src="{{av_transport.current_track_meta_data.album_art_uri | image_proxy}}">
+    {% if av_transport.next_track_meta_data.album_art_uri is defined %}
+    <img style="position:absolute; left: 0px; top: 0px; width: 1px; height: 1px" class="artwork"
+         src="{{av_transport.next_track_meta_data.album_art_uri | image_proxy}}">
+    {% endif %}
+    {% if av_transport.transport_state != "PLAYING" %}
+    <i class="fas fa-pause fa-3x icon"></i>
+    {% elif rendering_control.volume is defined and rendering_control.volume.Master == '0' %}
+    <i class="fas fa-volume-mute fa-3x icon"></i>
+    {% endif %}
 </div>
 <div class="title">{{av_transport.current_track_meta_data.title}}</div>
-<div class="artist">{{av_transport.current_track_meta_data.creator}} ● {{av_transport.current_track_meta_data.album}}</div>
+<div class="title">{{av_transport.current_track_meta_data.stream_content}}</div>
+<div class="artist">{{av_transport.current_track_meta_data.radio_show}}</div>
+<div class="artist">{{av_transport.current_track_meta_data.creator}}</div>
+<div class="artist">{{av_transport.current_track_meta_data.album}}</div>
 {% else %}
 <p>Nothing playing right now.</p>
 {% endif %}

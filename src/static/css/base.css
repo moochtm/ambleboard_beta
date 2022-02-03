@@ -13,6 +13,7 @@ body, html {
     background:rgba(0, 0, 0, 0.25);
     border-radius: .3em;
     padding: 15px;
+    margin: 15px;
 }
 
 /**
@@ -175,6 +176,7 @@ body, html {
 .translucent-info {
 	background: rgba(91, 130, 255, .6);
 }
+/*
 .icon {
 	position: relative;
 	top :-10px;
@@ -184,6 +186,7 @@ body, html {
 	font-weight: 100;
 	margin-right: 10px;
 }
+*/
 ul {
 	list-style-type: none;
 	padding: 0;
