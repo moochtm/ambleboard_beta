@@ -28,7 +28,7 @@ class Widget:
         self._template = (
             kwargs["data-template"]
             if "data-template" in kwargs
-            else type(self).widget_name.lower()
+            else kwargs["data-widget"]
         )
         self._kwargs = kwargs
         self._subscriber = None
@@ -47,23 +47,7 @@ class Widget:
     async def _start_instance(self):
         async def listener(key: aiopubsub.Key, arg: dict):
             logger.info(f"{type(self).widget_name} instance listener: {key}, {arg}")
-            try:
-                html = aiohttp_jinja2.render_string(
-                    f"{self._template}.html", self._request, arg
-                )
-            except Exception as e:
-                html = "<p>Widget could not be rendered!</p>"
-                traceback.print_exc()
-                logger.error("Widget could not be rendered!")
-            payload = {
-                "target": self._target,
-                "widget": type(self).widget_name.lower(),
-                "html": html,
-            }
-            logger.info(
-                f"{type(self).widget_name} instance sending payload to subscription queue."
-            )
-            await self._queue.put(json.dumps(payload))
+            await self._render_widget_html_and_send_to_queue(arg)
 
         self._subscriber = aiopubsub.Subscriber(
             type(self).worker_msg_queue, type(self).widget_name
@@ -72,7 +56,27 @@ class Widget:
         self._subscriber.add_async_listener(subscribe_key, listener)
 
         while True:
-            await asyncio.sleep(0.01)
+            await asyncio.sleep(0)
+
+    async def _render_widget_html_and_send_to_queue(self, arg):
+        logger.info(f"Rendering context: {arg}")
+        try:
+            html = aiohttp_jinja2.render_string(
+                f"{self._template}.html", self._request, arg
+            )
+        except Exception as e:
+            html = "<p>Widget could not be rendered!</p>"
+            traceback.print_exc()
+            logger.error("Widget could not be rendered!")
+        payload = {
+            "target": self._target,
+            "widget": type(self).widget_name.lower(),
+            "html": html,
+        }
+        logger.info(
+            f"{type(self).widget_name} instance sending payload to subscription queue."
+        )
+        await self._queue.put(json.dumps(payload))
 
     async def _start_class_worker(self):
         if type(self).worker_is_running:

@@ -1,8 +1,6 @@
 import asyncio
-import base64
 import hashlib
 import importlib
-import json
 import logging
 import os
 import pathlib
@@ -11,9 +9,9 @@ import ssl
 import time
 import uuid
 from urllib.parse import quote_plus
+from datetime import datetime
 
 import aiofiles
-import aiohttp
 from aiohttp import web, ClientSession
 import aiohttp_jinja2
 from aiohttp_sse import sse_response
@@ -82,7 +80,10 @@ class Server:
         app.on_shutdown.append(self._shutdown_app)
 
         # JINJA INIT
-        jinja2_filters = {"image_proxy": self._get_image_proxy_url}
+        jinja2_filters = {
+            "image_proxy": self._get_image_proxy_url,
+            "convert_date_time": self._convert_date_time,
+        }
         aiohttp_jinja2.setup(
             app, loader=jinja2.PackageLoader("src", "templates"), filters=jinja2_filters
         )
@@ -126,6 +127,7 @@ class Server:
         async with sse_response(request) as response:
 
             subscription_id = "$" + str(uuid.uuid4())[:8]
+            logger.info(f"Hello, subscription {subscription_id}!")
 
             # create queue and send initial message (to ensure "opened" event in client)
             queue = asyncio.Queue()
@@ -196,9 +198,18 @@ class Server:
             logger.info(f"Image Proxy sending image: url={url}, path={fp}")
             return resp
 
+    ########################################################################
+    # JINJA2 FILTERS
+
     def _get_image_proxy_url(self, url):
         url_param = quote_plus(url)
         return f"{self.protocol}://{self.host}:{self.port}/image_proxy?url={quote_plus(url)}"
+
+    def _convert_date_time(self, date_time_str, in_format, out_format):
+        date_time_obj = datetime.strptime(date_time_str, in_format)
+        return date_time_obj.strftime(out_format)
+
+    ########################################################################
 
     async def _widget_handler(self, request):
         """

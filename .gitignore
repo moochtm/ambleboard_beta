@@ -3,6 +3,8 @@
 domain_srv.crt
 domain_srv.key
 .idea
+client_secret.json
+*.token
 
 # Created by .ignore support plugin (hsz.mobi)
 ### Python template

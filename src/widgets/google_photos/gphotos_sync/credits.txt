@@ -1,0 +1,3 @@
+authorise.py and restclient.py borrowed from the very excellent Google Photos Sync!
+
+https://github.com/gilesknap/gphotos-sync
