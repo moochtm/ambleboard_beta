@@ -43,3 +43,5 @@ function sendMsg(msg){
         console.log("Data: " + data + "\nStatus: " + status);
       });
 }
+
+// TODO: add a configurable timeout where widgets are hidden if not updated within a given duration

@@ -72,6 +72,21 @@ class Widget(BaseWidget):
                 else True
             )
 
+            # add device info to context
+            # https://docs.python-soco.com/en/latest/api/soco.core.html
+            context["device_info"] = {
+                "player_name": device.player_name,
+                "ip_address": device.ip_address,
+                "play_mode": device.play_mode,
+                "shuffle": device.shuffle,
+                "repeat": device.repeat,
+                "mute": device.mute,
+                "volume": device.volume,
+                "is_playing_radio": device.is_playing_radio,
+                "is_playing_tv": device.is_playing_tv,
+                "music_source": device.music_source,
+            }
+
             logger.info(f"Sonos Created context: {context}")
 
             publisher.publish(publish_key, context)
