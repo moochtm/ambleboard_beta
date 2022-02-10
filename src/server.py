@@ -239,7 +239,7 @@ class Server:
         queue = request.app["subscriptions"][data_dict["subscription_id"]]["queue"]
         # add widget instance to session widgets
         request.app["subscriptions"][data_dict["subscription_id"]]["widgets"].append(
-            asyncio.ensure_future(
+            asyncio.create_task(
                 widget_module.Widget(request=request, queue=queue, **data_dict).start()
             )
         )

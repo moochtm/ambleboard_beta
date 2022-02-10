@@ -12,6 +12,7 @@ class Widget:
     #######################
     widget_name = "WIDGET"
     #######################
+    worker_is_needed = True
     worker_is_running = False
     worker_msg_queue = aiopubsub.Hub()
     worker_prev_update = {}
@@ -37,26 +38,36 @@ class Widget:
 
     async def start(self):
         try:
-            asyncio.create_task(self._start_class_worker())
-            asyncio.create_task(self._start_instance())
+            if type(self).worker_is_needed:
+                asyncio.create_task(self._start_class_worker())
+                # await self._start_class_worker()
+            instance_task = asyncio.create_task(self._start_instance())
+            # await self._start_instance()
             while True:
                 await asyncio.sleep(0)
         except asyncio.CancelledError:
-            await self._subscriber.remove_all_listeners()
+            logger.info(f"{type(self).widget_name} stopping widget")
+            instance_task.cancel()
+            if self._subscriber:
+                await self._subscriber.remove_all_listeners()
 
     async def _start_instance(self):
-        async def listener(key: aiopubsub.Key, arg: dict):
-            logger.info(f"{type(self).widget_name} instance listener: {key}, {arg}")
-            await self._render_widget_html_and_send_to_queue(arg)
+        try:
 
-        self._subscriber = aiopubsub.Subscriber(
-            type(self).worker_msg_queue, type(self).widget_name
-        )
-        subscribe_key = aiopubsub.Key(type(self).widget_name, self._channel)
-        self._subscriber.add_async_listener(subscribe_key, listener)
+            async def listener(key: aiopubsub.Key, arg: dict):
+                logger.info(f"{type(self).widget_name} instance listener: {key}, {arg}")
+                await self._render_widget_html_and_send_to_queue(arg)
 
-        while True:
-            await asyncio.sleep(0)
+            self._subscriber = aiopubsub.Subscriber(
+                type(self).worker_msg_queue, type(self).widget_name
+            )
+            subscribe_key = aiopubsub.Key(type(self).widget_name, self._channel)
+            self._subscriber.add_async_listener(subscribe_key, listener)
+
+            while True:
+                await asyncio.sleep(0)
+        except asyncio.CancelledError:
+            logger.info(f"{type(self).widget_name} stopping widget instance")
 
     async def _render_widget_html_and_send_to_queue(self, arg):
         logger.info(f"Rendering context: {arg}")

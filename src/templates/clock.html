@@ -3,18 +3,8 @@ context = {
     "time": 0
 }
 -->
-<style>
-.clock {font-size: 24px;}
-.time {font-weight: 300;}
-.day-of-week {display: inline-block;}
-.month {display: inline-block;}
-
-</style>
-<div class="clock text-left" style="position: relative">
-    <div class="time large">20:56</div>
-    <div class="date">
-        <div class="day-of-week">Sunday,</div>
-        <div class="month">23 January</div>
-    </div>
+<div style="position: relative">
+    <div class="time massive">{{date_time | convert_date_time('%Y-%m-%dT%H:%M:%SZ', '%H:%M') }}</div>
+    <div class="date w3-xxlarge">{{date_time | convert_date_time('%Y-%m-%dT%H:%M:%SZ', '%A, %-d %B') }}</div>
 </div>
 
