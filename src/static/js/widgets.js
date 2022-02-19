@@ -33,6 +33,7 @@ function init(){
                     msg[attrs[i].name] = attrs[i].value;
                  }
                }
+               console.log(msg);
                sendMsg(msg);
              }
     })

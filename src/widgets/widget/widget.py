@@ -73,7 +73,7 @@ class Widget:
         logger.info(f"Rendering context: {arg}")
         try:
             html = aiohttp_jinja2.render_string(
-                f"{self._template}.html", self._request, arg
+                f"widget_{self._template}.html", self._request, arg
             )
         except Exception as e:
             html = "<p>Widget could not be rendered!</p>"

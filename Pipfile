@@ -12,7 +12,6 @@ aiofiles = "*"
 typing-extensions = "*"
 aiohttp-sse = "*"
 pypubsub = "*"
-aiohttp-session = "*"
 cryptography = "*"
 aiopubsub = "*"
 

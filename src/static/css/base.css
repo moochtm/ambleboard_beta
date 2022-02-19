@@ -11,3 +11,11 @@
 .massive{
     font-size:96px!important
 }
+
+.weight-300{
+    font-weight: 300;
+}
+
+.line-height-1{
+    line-height:1!important;
+}
