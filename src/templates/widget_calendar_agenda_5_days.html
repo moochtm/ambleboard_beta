@@ -1,0 +1,71 @@
+{% macro agenda_event(event) -%}
+<div class="w3-cell-row" style="padding: 8px;">
+    <div class="w3-cell"
+            style="border-left-color:{{ event.color }};
+         background-color:{{ event.color }}33;
+         border-left-width: 0.3em;
+         border-radius: 0.15em;
+         border-left-style: solid;
+         padding: 8px;
+         ">
+        {% if not event.is_all_day %}
+        <div>{{ event.start_date_time | convert_date_time('%Y-%m-%dT%H:%M:%S.%f0', '%-H:%M')}}</div>
+        {% endif %}
+        <div class="w3-large">{{ event.subject }}</div>
+    </div>
+    {{ get_icon(event) }}
+</div>
+{%- endmacro %}
+
+{% macro get_icon(event) -%}
+    {% set icon = "" %}
+    {% if 'birthday' in event.subject|lower %}{% set icon = 'fad fa-birthday-cake' %}{% endif %}
+    {% if 'swimming' in event.subject|lower %}{% set icon = 'fad fa-swimming-pool' %}{% endif %}
+    {% if 'rondo' in event.calendar|lower %}{% set icon = 'far fa-music' %}{% endif %}
+    {% if 'choir' in event.subject|lower %}{% set icon = 'far fa-music' %}{% endif %}
+    {% if 'football' in event.subject|lower %}{% set icon = 'fad fa-futbol' %}{% endif %}
+    {% if 'tutor' in event.subject|lower %}{% set icon = 'fad fa-user-graduate' %}{% endif %}
+    {% if 'call' in event.subject|lower %}{% set icon = 'fad fa-phone' %}{% endif %}
+    {% if icon != "" %}
+<div class="w3-cell w3-display-container" style="width:15%;
+     background-color:{{ event.color }}33;
+     padding: 8px;"><div class="w3-display-right w3-padding">
+<i class="w3-xxlarge {{icon}}" style="margin-right: 0px"></i>
+</div></div>
+    {% endif %}
+{%- endmacro %}
+
+{% macro agenda_day(events, offset_days) -%}
+<div class="w3-cell" style="width:20%;">
+    <div class="w3-large" style="margin-left:8px">
+        {% if offset_days == 0 %}
+        Today
+        {% elif offset_days == 1 %}
+        Tomorrow
+        {% else %}
+        {{ ""|today(out_format="%a, %-d %b", offset_days=offset_days) }}
+        {% endif %}
+    </div>
+    {% for event in events %}
+        {% if ""|today(offset_days=offset_days) in event.start_date_time %}
+            {{ agenda_event(event) }}
+        {% endif %}
+    {% endfor %}
+</div>
+{%- endmacro %}
+
+<style>
+</style>
+<div>{{msg}}</div>
+{% if events is defined %}
+<div class="w3-round-large black-opacity-max" style="padding:8px; height:100%">
+    <div style="max-height: 100%; overflow-y: scroll;">
+    <div class="w3-cell-row">
+    {{ agenda_day(events, 0) }}
+    {{ agenda_day(events, 1) }}
+    {{ agenda_day(events, 2) }}
+    {{ agenda_day(events, 3) }}
+    {{ agenda_day(events, 4) }}
+    </div></div>
+</div>
+{% endif %}

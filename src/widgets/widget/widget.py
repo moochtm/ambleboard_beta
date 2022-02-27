@@ -27,7 +27,7 @@ class Widget:
             else type(self).widget_name.upper()
         )
         self._template = (
-            kwargs["data-template"]
+            f"{kwargs['data-widget']}_{kwargs['data-template']}"
             if "data-template" in kwargs
             else kwargs["data-widget"]
         )
@@ -38,18 +38,22 @@ class Widget:
 
     async def start(self):
         try:
+            tasks = []
             if type(self).worker_is_needed:
-                asyncio.create_task(self._start_class_worker())
-                # await self._start_class_worker()
-            instance_task = asyncio.create_task(self._start_instance())
-            # await self._start_instance()
+                tasks.append(asyncio.create_task(self._start_class_worker()))
+            tasks.append(asyncio.create_task(self._start_instance()))
+            # gathering = await asyncio.gather(tasks)
+            # print(gathering.count())
             while True:
                 await asyncio.sleep(0)
         except asyncio.CancelledError:
             logger.info(f"{type(self).widget_name} stopping widget")
-            instance_task.cancel()
+            for task in tasks:
+                task.cancel()
             if self._subscriber:
                 await self._subscriber.remove_all_listeners()
+        except Exception as e:
+            print("main exception: ", e)
 
     async def _start_instance(self):
         try:

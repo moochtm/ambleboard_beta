@@ -20,18 +20,43 @@ OR
 usage:
 in external module:
 
-oc = AsyncOauthClient('provider', 'user ID')
-if not oc.authenticate():
-    do something
+def cannot_authenticate():
+    send "need to auth" message
+
+oc = ProviderOauthClient(user_id)
+if not oc.load_token()
+    cannot_authenticate()
+response = os.async_request(...)
+if not response:
+    cannot_authenticate()
+
+def auth_from_existing_token(user_id)
+    if self.token = None:
+        self.load_token()
+    if self.token = None:
+        return False
+    set self.bearer_token
+    set self.refresh_token
+
+def auth_from_refresh_token(user_id)
+
+def auth_from_flow(user_id)
+
+def response_not_authenticated(response)
+
 """
 import asyncio
+from asyncio.exceptions import TimeoutError
 import json
 from functools import partial, wraps
 
 from aiohttp import web
-from aiohttp.client import ClientSession, _RequestContextManager
+from aiohttp.client import ClientSession, ClientTimeout
 import src.oauth.token_storage as token_storage
 
+import logging
+
+logger = logging.getLogger(__name__)
 
 HTTP_GET = "get"
 HTTP_POST = "post"
@@ -46,19 +71,6 @@ FLOW_CACHE = "flow_cache"
 USER_EMAIL = "mail"
 
 
-def async_wrap(func):
-    """Wrap a function doing I/O to run in an executor thread."""
-
-    @wraps(func)
-    async def run(*args, loop=None, executor=None, **kwargs):
-        if loop is None:
-            loop = asyncio.get_event_loop()
-        pfunc = partial(func, *args, **kwargs)
-        return await loop.run_in_executor(executor, pfunc)
-
-    return run
-
-
 class AsyncOauthClient:
     provider = None
     client_id = None
@@ -66,54 +78,95 @@ class AsyncOauthClient:
     scope = None
     redirect_uri = "https://www.httpbin.org/anything"
 
-    def __init__(self, user_id=None):
+    def __init__(self, user_id):
         self.user_id = user_id
-        self.session = ClientSession()
+        # self.session = ClientSession()
         self.token = None
+        self.bearer_token = None
+        self.refresh_token = None
 
-    async def __aexit__(self):
-        await self.session.close()
+    #####################################################################
+    # These methods may need to be overwritten by inheriting classes
 
-    def load_token(self, user_id):
-        if not token_storage.token_exists(self.provider, user_id):
-            return
-        self.token = token_storage.load_token(self.provider, user_id)
-        return self.token
+    def parse_token(self):
+        self.bearer_token = self.token
 
-    def save_token(self, user_id, token):
-        token_storage.save_token(self.provider, user_id, token)
-        self.token = token
+    def authenticate_from_refresh_token(self):
+        return False
 
-    def delete_token(self, user_id):
-        token_storage.delete_token(self.provider, user_id)
-
-    def authenticate(self, user_id):
-        """
-        Initiates OAuth2 authentication and authorization flow.
-        Sets self.token
-        """
-        # do something
+    def authenticate_from_flow(self):
+        return False
 
     def set_provider_headers(self, method, **kwargs):
         return kwargs
 
+    def response_is_authenticated(self, response):
+        return response.status != 401
+
+    #####################################################################
+    # Methods below this point should be usable by all inheriting classes
+
+    def load_token(self):
+        if not token_storage.token_exists(self.provider, self.user_id):
+            logger.debug("Could not find token file.")
+            return False
+        self.token = token_storage.load_token(self.provider, self.user_id)
+        if not self.parse_token():
+            logger.debug("Could not parse token file.")
+            self.delete_token()
+            return False
+        return True
+
+    def save_token(self, token):
+        token_storage.save_token(self.provider, self.user_id, token)
+        self.token = token
+        self.parse_token()
+        return True
+
+    def delete_token(self):
+        token_storage.delete_token(self.provider, self.user_id)
+
     async def async_request(self, method, url, **kwargs):
+        if not self.bearer_token:
+            logger.warning("No Bearer Token")
+            return False
+
         assert method in HTTP_ALLOWED, "Method must be one of the allowed ones"
-        if not self.token:
-            self.authenticate()
 
         kwargs = kwargs.copy()
         # Ensure headers exist & make a copy
         kwargs["headers"] = headers = dict(kwargs.get("headers", {}))
-        headers["Authorization"] = "Bearer " + self.token
+        headers["Authorization"] = "Bearer " + self.bearer_token
 
         kwargs = self.set_provider_headers(method, **kwargs)
         if "data" in kwargs:
             kwargs["data"] = json.dumps(kwargs["data"])  # auto convert to json
-        result = await self.session.request(method, url, **kwargs)
-        if result.status == 401:
-            self.delete_token(self.user_id)
-        return await result.json()
 
-    async def close_session(self):
-        await self.session.close()
+        session = ClientSession()
+        timeout = ClientTimeout(total=5)
+        result = False
+        while True:
+            try:
+                async with session.request(
+                    method, url, timeout=timeout, **kwargs
+                ) as response:
+                    result = await response.json()
+                    logger.debug(result)
+                    if self.response_is_authenticated(response):
+                        logger.debug("Successful response.")
+                        break
+                    logger.warning("Token didn't work. Deleting token.")
+                    self.delete_token()
+                    if self.authenticate_from_refresh_token():
+                        logger.debug("Successfully authenticated using refresh token.")
+                        headers["Authorization"] = "Bearer " + self.bearer_token
+                        continue
+
+                # response = await session.request(method, url, timeout=timeout, **kwargs)
+            except Exception as e:
+                print(e)
+                print("timeout!")
+                continue
+            break
+        await session.close()
+        return result

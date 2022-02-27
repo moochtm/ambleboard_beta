@@ -2,6 +2,10 @@ from src.oauth.async_oauth import AsyncOauthClient
 from requests_oauthlib import OAuth2Session
 import asyncio
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 # OAuth endpoints given in the Google API documentation
 
 
@@ -19,13 +23,15 @@ class GoogleAsyncOauthClient(AsyncOauthClient):
         "client_secret": client_secret,
     }
 
-    def authenticate(self, user_id=None):
-        self.user_id = user_id or self.user_id
-        if self.user_id:
-            self.token = self.load_token(self.user_id)
-            if self.token:
-                return
+    def parse_token(self):
+        try:
+            self.bearer_token = self.token["access_token"]
+            self.refresh_token = self.token["refresh_token"]
+        except KeyError:
+            return False
+        return True
 
+    def authenticate_from_flow(self):
         app = OAuth2Session(
             self.client_id,
             scope=self.scope,
@@ -37,7 +43,7 @@ class GoogleAsyncOauthClient(AsyncOauthClient):
             self.authorization_base_url, access_type="offline", prompt="select_account"
         )
         print(
-            f"Please go here and sign in: {authorization_url}\n",
+            f"Please go to the URL below and sign in as {self.user_id}\n{authorization_url}\n",
         )
 
         # Get the authorization verifier code from the callback url
@@ -48,7 +54,25 @@ class GoogleAsyncOauthClient(AsyncOauthClient):
             self.token_uri, client_secret=self.client_secret, code=code
         )
         print(token)
-        self.save_token(user_id, token["access_token"])
+        self.user_id = user_id
+        self.save_token(token)
+
+    def authenticate_from_refresh_token(self):
+        logger.info("Trying to auth using refresh token.")
+        app = OAuth2Session(
+            self.client_id,
+            scope=self.scope,
+            redirect_uri=self.redirect_uri,
+            auto_refresh_url=self.token_uri,
+            auto_refresh_kwargs=self.extra,
+            token=self.token,
+        )
+        token = app.refresh_token(self.token_uri)
+        logger.info(f"Token: {token}")
+        if "error" in token:
+            return False
+        self.save_token(token)
+        return True
 
     def set_provider_headers(self, method, **kwargs):
         if method == "get":
@@ -59,10 +83,23 @@ class GoogleAsyncOauthClient(AsyncOauthClient):
 
 
 async def main():
-    client = GoogleAsyncOauthClient()
-    client.authenticate()
-    await client.close_session()
+    user_id = input("Enter the email address you used when logging in:\n")
+    client = GoogleAsyncOauthClient(user_id=user_id)
+    need_to_auth_flow = False
+    if not client.load_token():
+        print("PLEASE AUTHENTICATE")
+        need_to_auth_flow = (
+            True  # In a widget this would be a return as auth is done by separate tool
+        )
+    else:
+        print("TOKEN LOADED")
+
+    if need_to_auth_flow:
+        client.authenticate_from_flow()
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.DEBUG)
     asyncio.run(main())
+
+# https://myaccount.google.com/permissions?continue=https%3A%2F%2Fmyaccount.google.com%2Fsecurity

@@ -1,8 +1,6 @@
 import aiopubsub
 from src.widgets.widget.widget import Widget as BaseWidget
 from src.oauth.google_oauth import GoogleAsyncOauthClient
-import os
-from pathlib import Path
 import asyncio
 
 import logging
@@ -22,6 +20,16 @@ class Widget(BaseWidget):
 
     async def _start_instance(self):
         try:
+
+            async def send_please_authenticate(provider):
+                msg = {
+                    "msg": f"Please authenticate '{provider}' and refresh the webpage."
+                }
+                logger.warning(msg)
+                await self._render_widget_html_and_send_to_queue(msg)
+                await asyncio.sleep(0)
+                return
+
             required_args = ["data-channel", "data-refresh-interval", "data-user"]
             missing_args = [arg for arg in required_args if arg not in self._kwargs]
             if missing_args:
@@ -36,6 +44,10 @@ class Widget(BaseWidget):
             refresh_interval = self._kwargs["data-refresh-interval"]
 
             self.client = GoogleAsyncOauthClient(user_id=user_id)
+            if not self.client.load_token():
+                print("JEFF HELM!!!")
+                await send_please_authenticate("google")
+                return
 
             # Get all Albums to find ID
             msg = {"msg": f"Finding album: {album_title}"}

@@ -9,7 +9,7 @@ import ssl
 import time
 import uuid
 from urllib.parse import quote_plus
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import aiofiles
 from aiohttp import web, ClientSession
@@ -83,6 +83,7 @@ class Server:
         jinja2_filters = {
             "image_proxy": self._get_image_proxy_url,
             "convert_date_time": self._convert_date_time,
+            "today": self._today,
         }
         aiohttp_jinja2.setup(
             app, loader=jinja2.PackageLoader("src", "templates"), filters=jinja2_filters
@@ -208,6 +209,10 @@ class Server:
     def _convert_date_time(self, date_time_str, in_format, out_format):
         date_time_obj = datetime.strptime(date_time_str, in_format)
         return date_time_obj.strftime(out_format)
+
+    def _today(self, input, out_format="%Y-%m-%d", offset_days=0):
+        date_time = datetime.now() + timedelta(days=offset_days)
+        return date_time.strftime(out_format)
 
     ########################################################################
 
