@@ -15,6 +15,7 @@ pypubsub = "*"
 cryptography = "*"
 aiopubsub = "*"
 msal = "*"
+requests-oauthlib = "*"
 
 [dev-packages]
 
