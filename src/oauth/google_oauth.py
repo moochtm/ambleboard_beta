@@ -40,7 +40,7 @@ class GoogleAsyncOauthClient(AsyncOauthClient):
             auto_refresh_kwargs=self.extra,
         )
         authorization_url, _ = app.authorization_url(
-            self.authorization_base_url, access_type="offline", prompt="select_account"
+            self.authorization_base_url, access_type="offline", prompt="consent"
         )
         print(
             f"Please go to the URL below and sign in as {self.user_id}\n{authorization_url}\n",
@@ -48,13 +48,11 @@ class GoogleAsyncOauthClient(AsyncOauthClient):
 
         # Get the authorization verifier code from the callback url
         code = input("Paste the code string here:\n")
-        user_id = input("Enter the email address you used when logging in:\n")
 
         token = app.fetch_token(
             self.token_uri, client_secret=self.client_secret, code=code
         )
         print(token)
-        self.user_id = user_id
         self.save_token(token)
 
     def authenticate_from_refresh_token(self):
@@ -83,7 +81,7 @@ class GoogleAsyncOauthClient(AsyncOauthClient):
 
 
 async def main():
-    user_id = input("Enter the email address you used when logging in:\n")
+    user_id = input("Enter the email address you will use when logging in:\n")
     client = GoogleAsyncOauthClient(user_id=user_id)
     need_to_auth_flow = False
     if not client.load_token():
@@ -99,7 +97,6 @@ async def main():
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.DEBUG)
     asyncio.run(main())
 
 # https://myaccount.google.com/permissions?continue=https%3A%2F%2Fmyaccount.google.com%2Fsecurity
