@@ -19,13 +19,13 @@
 
 {% macro get_icon(event) -%}
     {% set icon = "" %}
-    {% if 'birthday' in event.subject|lower %}{% set icon = 'fad fa-birthday-cake' %}{% endif %}
-    {% if 'swimming' in event.subject|lower %}{% set icon = 'fad fa-swimming-pool' %}{% endif %}
-    {% if 'rondo' in event.calendar|lower %}{% set icon = 'far fa-music' %}{% endif %}
-    {% if 'choir' in event.subject|lower %}{% set icon = 'far fa-music' %}{% endif %}
-    {% if 'football' in event.subject|lower %}{% set icon = 'fad fa-futbol' %}{% endif %}
-    {% if 'tutor' in event.subject|lower %}{% set icon = 'fad fa-user-graduate' %}{% endif %}
-    {% if 'call' in event.subject|lower %}{% set icon = 'fad fa-phone' %}{% endif %}
+    {% if 'birthday' in event.subject|lower %}{% set icon = 'fal fa-birthday-cake' %}{% endif %}
+    {% if 'swimming' in event.subject|lower %}{% set icon = 'fal fa-swimming-pool' %}{% endif %}
+    {% if 'rondo' in event.calendar|lower %}{% set icon = 'fal fa-music' %}{% endif %}
+    {% if 'choir' in event.subject|lower %}{% set icon = 'fal fa-music' %}{% endif %}
+    {% if 'football' in event.subject|lower %}{% set icon = 'fal fa-futbol' %}{% endif %}
+    {% if 'tutor' in event.subject|lower %}{% set icon = 'fal fa-user-graduate' %}{% endif %}
+    {% if 'call' in event.subject|lower %}{% set icon = 'fal fa-phone' %}{% endif %}
     {% if icon != "" %}
 <div class="w3-cell w3-display-container" style="width:15%;
      background-color:{{ event.color }}33;

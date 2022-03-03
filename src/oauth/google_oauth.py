@@ -6,8 +6,6 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-# OAuth endpoints given in the Google API documentation
-
 
 class GoogleAsyncOauthClient(AsyncOauthClient):
     provider = "google"
@@ -98,5 +96,3 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
-
-# https://myaccount.google.com/permissions?continue=https%3A%2F%2Fmyaccount.google.com%2Fsecurity

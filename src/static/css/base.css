@@ -23,3 +23,7 @@ html {
 .line-height-1{
     line-height:1!important;
 }
+
+.no-padding{
+    padding:0px!important;
+}

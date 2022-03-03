@@ -32,10 +32,9 @@ context = {
     }*/
 
 </style>
-<div class="w3-container w3-margin w3-padding-16 w3-round-large black-opacity-max">
-    <div>{{device_info.player_name}}</div>
+<div class="w3-container w3-padding-16 w3-round-large black-opacity-max">
 {% if av_transport.current_track_exists %}
-    <div class="">
+    <div style="position:relative;">
         <img class="w3-border w3-opacity-off" style="width:100%" src="{{av_transport.current_track_meta_data.album_art_uri | image_proxy}}">
         {% if av_transport.next_track_exists %}
         {% if av_transport.next_track_meta_data.album_art_uri != "" %}
@@ -47,21 +46,21 @@ context = {
         {% elif rendering_control.volume is defined and rendering_control.volume.Master == '0' %}
         <!--<i class="fas fa-volume-mute fa-3x icon"></i>-->
         {% endif %}
+        <div style="position:absolute;left:0px;bottom:0px;width:100%;background: rgba(0, 0, 0, 0.5);padding:8px">
+            <div>{{device_info.player_name}}</div>
+            <div><i class="fas fa-music" style="margin-right: 8px;"></i>{{av_transport.current_track_meta_data.title}}</div>
+            <div>{{av_transport.current_track_meta_data.stream_content}}</div>
+            {% if av_transport.current_track_meta_data.radio_show != "" %}
+            <div><i class="fas fa-radio" style="margin-right: 8px;"></i>{{av_transport.current_track_meta_data.radio_show}}</div>
+            {% endif %}
+            {% if av_transport.current_track_meta_data.creator != "" %}
+            <div><i class="fas fa-user" style="margin-right: 8px;"></i>{{av_transport.current_track_meta_data.creator}}</div>
+            {% endif %}
+            {% if av_transport.current_track_meta_data.album != "" %}
+            <div><i class="fas fa-compact-disc" style="margin-right: 8px;"></i>{{av_transport.current_track_meta_data.album}}</div>
+            {% endif %}
+        </div>
     </div>
-<div style="font-weight: 600">
-
-    <div><p><i class="fas fa-music" style="margin-right: 8px;"></i>{{av_transport.current_track_meta_data.title}}</p></div>
-    <div>{{av_transport.current_track_meta_data.stream_content}}</div>
-</div>
-    {% if av_transport.current_track_meta_data.radio_show != "" %}
-    <div><i class="fas fa-radio" style="margin-right: 8px;"></i>{{av_transport.current_track_meta_data.radio_show}}</div>
-    {% endif %}
-    {% if av_transport.current_track_meta_data.creator != "" %}
-    <div><i class="fas fa-user" style="margin-right: 8px;"></i>{{av_transport.current_track_meta_data.creator}}</div>
-    {% endif %}
-    {% if av_transport.current_track_meta_data.album != "" %}
-    <div><i class="fas fa-compact-disc" style="margin-right: 8px;"></i>{{av_transport.current_track_meta_data.album}}</div>
-    {% endif %}
 {% else %}
 Nothing playing right now.
 {% endif %}
