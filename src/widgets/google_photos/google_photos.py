@@ -45,7 +45,6 @@ class Widget(BaseWidget):
 
             self.client = GoogleAsyncOauthClient(user_id=user_id)
             if not self.client.load_token():
-                print("JEFF HELM!!!")
                 await send_please_authenticate("google")
                 return
 

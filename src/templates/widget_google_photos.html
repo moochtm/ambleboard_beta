@@ -22,11 +22,11 @@ img.bg {
 }
 
 .fade-in {
-  animation: fadeIn 2s;
-  -webkit-animation: fadeIn 2s;
-  -moz-animation: fadeIn 2s;
-  -o-animation: fadeIn 2s;
-  -ms-animation: fadeIn 2s;
+  animation: fadeIn 4s;
+  -webkit-animation: fadeIn 4s;
+  -moz-animation: fadeIn 4s;
+  -o-animation: fadeIn 4s;
+  -ms-animation: fadeIn 4s;
 }
 @keyframes fadeIn {
   0% {opacity:0;}
@@ -83,7 +83,7 @@ img.bg {
 <div class="vignette"></div>
 
 <div class="w3-bottom w3-cell-row black-opacity-max">
-    <div class="w3-container w3-cell w3-padding-small"><i class="fas fa-images" style="margin-right: 8px;"></i>{{album.title}}</div>
+    <div class="w3-container w3-cell w3-padding-small"><i class="fas fa-images" style="margin-right: 8px;"></i>{{album.title}} ({{current_item.filename}})</div>
     <div class="w3-container w3-cell w3-right-align w3-padding-small"><i class="fas fa-calendar-alt" style="margin-right: 8px;"></i>{{next_item.mediaMetadata.creationTime | convert_date_time('%Y-%m-%dT%H:%M:%SZ', '%d %B %Y') }}</div>
 </div>
 
