@@ -2,6 +2,7 @@ import asyncio
 import hashlib
 import importlib
 import logging
+from logging.handlers import TimedRotatingFileHandler
 import os
 import pathlib
 import socket
@@ -10,6 +11,7 @@ import time
 import uuid
 from urllib.parse import quote_plus
 from datetime import datetime, timedelta
+import sys
 
 import aiofiles
 from aiohttp import web, ClientSession
@@ -20,9 +22,17 @@ import jinja2
 
 # SET UP LOGGING
 logging.basicConfig(
-    format="%(asctime)s | %(levelname)-7s | %(name)-30s: %(message)s",
+    format="%(asctime)s | %(levelname)-7s | %(module)-20s: %(message)s",
     level=logging.INFO,
     datefmt="%H:%M:%S",
+    handlers=[
+        logging.StreamHandler(sys.stdout),
+        TimedRotatingFileHandler(
+            filename="log.log",
+            when="H",
+            interval=2,
+        ),
+    ],
 )
 logger = logging.getLogger(__name__)
 

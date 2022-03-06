@@ -145,6 +145,7 @@ class AsyncOauthClient:
         session = ClientSession()
         timeout = ClientTimeout(total=5)
         result = False
+        timeout_count = 0
         while True:
             try:
                 async with session.request(
@@ -164,8 +165,10 @@ class AsyncOauthClient:
 
                 # response = await session.request(method, url, timeout=timeout, **kwargs)
             except Exception as e:
-                print(e)
-                print("timeout!")
+                logger.error(e)
+                timeout_count += 1
+                if timeout_count == 5:
+                    break
                 continue
             break
         await session.close()

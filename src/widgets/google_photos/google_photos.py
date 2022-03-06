@@ -50,6 +50,7 @@ class Widget(BaseWidget):
 
             # Get all Albums to find ID
             msg = {"msg": f"Finding album: {album_title}"}
+            logger.info(f"Finding album: {album_title}")
             await self._render_widget_html_and_send_to_queue(msg)
             params = {"pageSize": 50, "pageToken": ""}
             result = []
@@ -58,6 +59,7 @@ class Widget(BaseWidget):
             )
             result += response["albums"]
             while "nextPageToken" in response:
+                logger.info(f"Finding album: {album_title}: Getting next page.")
                 params = {"pageSize": 50, "pageToken": response["nextPageToken"]}
                 response = await self.client.async_request(
                     "get",
@@ -68,38 +70,24 @@ class Widget(BaseWidget):
 
             album = [item for item in result if item["title"] == album_title][0]
 
-            # Get all mediaItems in Album
-            msg = {"msg": f"Getting photos from album: {album_title}"}
-            await self._render_widget_html_and_send_to_queue(msg)
-            body = {"albumId": album["id"], "pageSize": 100, "pageToken": ""}
-            media_items = []
-            response = await self.client.async_request(
-                "post",
-                "https://photoslibrary.googleapis.com/v1/mediaItems:search",
-                data=body,
-            )
-            media_items += response["mediaItems"]
-            while "nextPageToken" in response:
-                body = {
-                    "albumId": album["id"],
-                    "pageSize": 100,
-                    "pageToken": response["nextPageToken"],
-                }
-                response = await self.client.async_request(
-                    "post",
-                    "https://photoslibrary.googleapis.com/v1/mediaItems:search",
-                    data=body,
-                )
-                media_items += response["mediaItems"]
+            media_items = await self._get_media_items_in_album(album)
 
             # Start the loop
             current_i = 0
             while True:
                 next_i = current_i + 1 if current_i + 1 < len(media_items) else 0
+                current_item = await self.client.async_request(
+                    "get",
+                    f"https://photoslibrary.googleapis.com/v1/mediaItems/{media_items[current_i]['id']}",
+                )
+                next_item = await self.client.async_request(
+                    "get",
+                    f"https://photoslibrary.googleapis.com/v1/mediaItems/{media_items[next_i]['id']}",
+                )
                 msg = {
                     "album": album,
-                    "current_item": media_items[current_i],
-                    "next_item": media_items[next_i],
+                    "current_item": current_item,
+                    "next_item": next_item,
                 }
                 ###################################
                 await self._render_widget_html_and_send_to_queue(msg)
@@ -107,7 +95,38 @@ class Widget(BaseWidget):
                 await asyncio.sleep(int(refresh_interval))
                 current_i = next_i
         except asyncio.CancelledError:
-            await self.client.close_session()
+            return
+
+    async def _get_media_items_in_album(self, album):
+        # Get all mediaItems in Album
+        msg = {"msg": f"Getting photos from album: {album['title']}"}
+        await self._render_widget_html_and_send_to_queue(msg)
+        logger.info(f"Getting photos from album: {album['title']}")
+        body = {"albumId": album["id"], "pageSize": 100, "pageToken": ""}
+        media_items = []
+        response = await self.client.async_request(
+            "post",
+            "https://photoslibrary.googleapis.com/v1/mediaItems:search",
+            data=body,
+        )
+        media_items += response["mediaItems"]
+        while "nextPageToken" in response:
+            logger.info(
+                f"Getting photos from album: {album['title']}: Getting next page."
+            )
+            body = {
+                "albumId": album["id"],
+                "pageSize": 100,
+                "pageToken": response["nextPageToken"],
+            }
+            response = await self.client.async_request(
+                "post",
+                "https://photoslibrary.googleapis.com/v1/mediaItems:search",
+                data=body,
+            )
+            media_items += response["mediaItems"]
+            logger.debug(f"mediaItems in calendar: {media_items}")
+        return media_items
 
     async def _start_worker_publishers(self, publisher):
         ######################################################
