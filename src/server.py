@@ -9,7 +9,7 @@ import socket
 import ssl
 import time
 import uuid
-from urllib.parse import quote_plus
+from urllib.parse import quote_plus, unquote
 from datetime import datetime, timedelta
 import sys
 
@@ -175,7 +175,9 @@ class Server:
         Image_url is downloaded if hasn't been already, and then returned
         This ensures all image_proxy are served from the same domain (better browser compatibility)
         """
-        params = request.rel_url.query
+        # A bit messy but some image_urls contain their own params, this approach just carves off /image_proxy?url=
+
+        image_url = str(request.rel_url)[17:]
         # get image_proxy folder path
         dp = os.path.join(".", "image_proxy")
         if not os.path.exists(dp):
@@ -194,7 +196,7 @@ class Server:
         # TODO: Find a way to stop concurrent downloads caused by multiple GETs in small time window.
         #   e.g. a lock file?
         async with ClientSession() as session:
-            url = params["url"]
+            url = image_url
             url_hash = hashlib.sha1(url.encode("UTF-8")).hexdigest()
             fp = os.path.join(dp, url_hash + ".jpeg")
             if not os.path.exists(fp):
@@ -213,8 +215,10 @@ class Server:
     # JINJA2 FILTERS
 
     def _get_image_proxy_url(self, url):
-        url_param = quote_plus(url)
-        return f"{self.protocol}://{self.host}:{self.port}/image_proxy?url={quote_plus(url)}"
+        return (
+            f"{self.protocol}://{self.host}:{self.port}/image_proxy?url={unquote(url)}"
+        )
+        # return f"{self.protocol}://{self.host}:{self.port}/image_proxy?url={unquote(url)}"
 
     def _convert_date_time(self, date_time_str, in_format, out_format):
         date_time_obj = datetime.strptime(date_time_str, in_format)
