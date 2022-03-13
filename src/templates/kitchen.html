@@ -34,7 +34,8 @@
         </div>
     </div>
     <div style="position:absolute; width:30%; left:2%; top:2%">
-        <div class="widget" id="clock" data-widget="clock"></div>
+        <div id="time" class="time massive weight-300 line-height-1"></div>
+        <div id="date" class="date w3-xxlarge line-height-1"></div>
     </div>
     <div style="position:absolute; width:21%; height:21%; left:78%; top:2%">
         <div class="widget" data-channel="Kitchen" data-widget="sonos" id="sonos1">::sonos widget::</div>
@@ -50,5 +51,35 @@
           </div>
       </div>-->
     <script src="/static/js/widgets.js"></script>
+    <script type="text/javascript">
+    const weekdays = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+    const months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+    function display_ct() {
+        const d = new Date();
+        hours = d.getHours( );
+        hours=hours.toString().length==1? 0+hours.toString() : hours;
+
+        var minutes=d.getMinutes().toString()
+        minutes=minutes.length==1 ? 0+minutes : minutes;
+
+        let day = weekdays[d.getDay()];
+        let month = months[d.getMonth()];
+
+        var dt=d.getDate().toString();
+        dt=dt.length==1 ? 0+dt : dt;
+
+        time = hours + ":" +  minutes;
+        date = day + ", " + dt + " " + month
+
+        document.getElementById('time').innerHTML = time;
+        document.getElementById('date').innerHTML = date;
+        display_c();
+    }
+    function display_c(){
+        var refresh=1000; // Refresh rate in milli seconds
+        mytime=setTimeout('display_ct()',refresh)
+    }
+    display_c()
+</script>
 </body>
 </html>

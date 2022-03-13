@@ -8,6 +8,15 @@ html {
 	background: rgba(0, 0, 0, 0.25)!important;
 }
 
+.black-opacity-fade-max{
+	color:#fff!important;
+	background: linear-gradient(
+        to top,
+        black,
+        rgba(0, 0, 0, 0)
+      );
+}
+
 .text-shadow{
     text-shadow: 1px 1px 0px rgba(0,0,0,1);
 }

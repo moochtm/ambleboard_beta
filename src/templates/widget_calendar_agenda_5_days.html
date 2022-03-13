@@ -26,7 +26,10 @@
     {% if 'football' in event.subject|lower %}{% set icon = 'fal fa-futbol' %}{% endif %}
     {% if 'tutor' in event.subject|lower %}{% set icon = 'fal fa-user-graduate' %}{% endif %}
     {% if 'call' in event.subject|lower %}{% set icon = 'fal fa-phone' %}{% endif %}
+    {% if 'sailing' in event.subject|lower %}{% set icon = 'fal fa-anchor' %}{% endif %}
     {% if icon != "" %}
+<div class="w3-cell" style="width:3%;background-color:{{ event.color }}33;
+     margin: 8px;"></div>
 <div class="w3-cell w3-display-container" style="width:15%;
      background-color:{{ event.color }}33;
      padding: 8px;"><div class="w3-display-right w3-padding">

@@ -46,19 +46,37 @@ context = {
         {% elif rendering_control.volume is defined and rendering_control.volume.Master == '0' %}
         <!--<i class="fas fa-volume-mute fa-3x icon"></i>-->
         {% endif %}
-        <div style="position:absolute;left:0px;bottom:0px;width:100%;background: rgba(0, 0, 0, 0.5);padding:8px">
-            <div>{{device_info.player_name}}</div>
-            <div><i class="fas fa-music" style="margin-right: 8px;"></i>{{av_transport.current_track_meta_data.title}}</div>
+        <div style="position:absolute;left:0px;bottom:0px;width:100%;background: linear-gradient(0deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.6) 70%, rgba(0,0,0,0) 100%);padding:50px 8px 8px 8px">
+            <table>
+                <tr>
+                    <td align="center"><i class="fal fa-speaker" style="margin-right: 8px;"></i></td>
+                    <td>{{device_info.player_name}}</td>
+                </tr>
+                <tr>
+                    <td align="center"><i class="fal fa-music" style="margin-right: 8px;"></i></td>
+                    <td>{{av_transport.current_track_meta_data.title}}</td>
+                </tr>
+                <tr>
+                    <td align="center"><i class="fal fa-user" style="margin-right: 8px;"></i></td>
+                    <td>{{av_transport.current_track_meta_data.creator}}</td>
+                </tr>
+                <tr>
+                    <td align="center"><i class="fal fa-compact-disc" style="margin-right: 8px;"></i></td>
+                    <td>{{av_transport.current_track_meta_data.album}}</td>
+                </tr>
+            <div></div>
+            <div></div>
             <div>{{av_transport.current_track_meta_data.stream_content}}</div>
-            {% if av_transport.current_track_meta_data.radio_show != "" %}
-            <div><i class="fas fa-radio" style="margin-right: 8px;"></i>{{av_transport.current_track_meta_data.radio_show}}</div>
+            {% if av_transport.current_track_meta_data.radio_show != None %}
+            <!--<div><i class="fal fa-radio" style="margin-right: 8px;"></i>{{av_transport.current_track_meta_data.radio_show}}</div>-->
             {% endif %}
             {% if av_transport.current_track_meta_data.creator != "" %}
-            <div><i class="fas fa-user" style="margin-right: 8px;"></i>{{av_transport.current_track_meta_data.creator}}</div>
+            <div></div>
             {% endif %}
-            {% if av_transport.current_track_meta_data.album != "" %}
-            <div><i class="fas fa-compact-disc" style="margin-right: 8px;"></i>{{av_transport.current_track_meta_data.album}}</div>
+            {% if av_transport.current_track_meta_data.album != None %}
+            <div></div>
             {% endif %}
+            </table>
         </div>
     </div>
 {% else %}
