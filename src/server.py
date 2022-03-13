@@ -28,9 +28,7 @@ logging.basicConfig(
     handlers=[
         logging.StreamHandler(sys.stdout),
         TimedRotatingFileHandler(
-            filename="log.log",
-            when="H",
-            interval=2,
+            filename="log.log", when="H", interval=6, backupCount=12
         ),
     ],
 )
