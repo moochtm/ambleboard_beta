@@ -78,6 +78,7 @@ img.bg {
 </style>
 <div>{{msg}}</div>
 {% if current_item is defined %}
+<img class="bg vignette" src="{{preload_item.baseUrl | image_proxy}}=w1920-h1080-c">
 <img class="bg vignette" src="{{current_item.baseUrl | image_proxy}}=w1920-h1080-c">
 <img class="fade-in bg vignette" src="{{next_item.baseUrl | image_proxy}}=w1920-h1080-c">
 <div class="vignette"></div>

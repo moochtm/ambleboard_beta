@@ -72,28 +72,38 @@ class Widget(BaseWidget):
 
             media_items = await self._get_media_items_in_album(album)
 
-            # Start the loop
-            current_i = 0
+            # GET an initial current_item
+            current_item = await self.client.async_request(
+                "get",
+                f"https://photoslibrary.googleapis.com/v1/mediaItems/{media_items[0]['id']}",
+            )
+            # GET an initial next_item
+            next_item = await self.client.async_request(
+                "get",
+                f"https://photoslibrary.googleapis.com/v1/mediaItems/{media_items[1]['id']}",
+            )
+            preload_i = 2
             while True:
-                next_i = current_i + 1 if current_i + 1 < len(media_items) else 0
-                current_item = await self.client.async_request(
+                # GET photo to preload. Doing this each time triggers token refresh if needed.
+                preload_item = await self.client.async_request(
                     "get",
-                    f"https://photoslibrary.googleapis.com/v1/mediaItems/{media_items[current_i]['id']}",
-                )
-                next_item = await self.client.async_request(
-                    "get",
-                    f"https://photoslibrary.googleapis.com/v1/mediaItems/{media_items[next_i]['id']}",
+                    f"https://photoslibrary.googleapis.com/v1/mediaItems/{media_items[preload_i]['id']}",
                 )
                 msg = {
                     "album": album,
                     "current_item": current_item,
                     "next_item": next_item,
+                    "preload_item": preload_item,
                 }
                 ###################################
                 await self._render_widget_html_and_send_to_queue(msg)
                 ###################################
                 await asyncio.sleep(int(refresh_interval))
-                current_i = next_i
+                # cycle items
+                current_item = next_item
+                next_item = preload_item
+                # get new preload_i, starting again at 0 if needed
+                preload_i = preload_i + 1 if preload_i + 1 < len(media_items) else 0
         except asyncio.CancelledError:
             return
 
