@@ -16,6 +16,8 @@ cryptography = "*"
 aiopubsub = "*"
 msal = "*"
 requests-oauthlib = "*"
+python-dateutil = "*"
+pytz = "*"
 
 [dev-packages]
 

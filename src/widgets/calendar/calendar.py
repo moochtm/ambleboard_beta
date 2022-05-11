@@ -3,7 +3,7 @@ import asyncio
 from src.widgets.widget.widget import Widget as BaseWidget
 from src.oauth.microsoft_oauth import MicrosoftAsyncOauthClient
 from datetime import datetime, timedelta
-import urllib.parse
+from dateutil import parser, relativedelta
 
 import logging
 
@@ -28,7 +28,7 @@ class Widget(BaseWidget):
             return
 
         calendars = self._build_calendars_config()
-        required_args = ["data-template"]
+        required_args = ["data-template", "data-timezone-offset"]
         for c in calendars:
             for k in c:
                 required_args.append(c[k])
@@ -125,6 +125,24 @@ class Widget(BaseWidget):
                 result["@odata.nextLink"],
             )
             results.extend(result["value"])
+
+        # apply timezone offset to start and end times
+        timezone_offset = self._kwargs["data-timezone-offset"]
+        dt_format = "%Y-%m-%dT%H:%M:%S.%f0"
+        for event in results:
+            # start datetime
+            current_dt = parser.parse(event["start"]["dateTime"])
+            current_dt = current_dt + relativedelta.relativedelta(
+                minutes=int(timezone_offset)
+            )
+            event["start"]["dateTime"] = current_dt.strftime(dt_format)
+            # end datetime
+            current_dt = parser.parse(event["end"]["dateTime"])
+            current_dt = current_dt + relativedelta.relativedelta(
+                minutes=int(timezone_offset)
+            )
+            event["end"]["dateTime"] = current_dt.strftime(dt_format)
+
         return [
             {
                 "calendar": self._kwargs[calendar["name"]],
@@ -132,7 +150,6 @@ class Widget(BaseWidget):
                 "subject": event["subject"],
                 "is_all_day": event["isAllDay"],
                 "start_date_time": event["start"]["dateTime"],
-                "start_time_zone": event["start"]["timeZone"],
                 "end_date_time": event["end"]["dateTime"],
                 "end_time_zone": event["end"]["timeZone"],
                 "location": event["location"]["displayName"],
