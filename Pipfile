@@ -18,6 +18,7 @@ msal = "*"
 requests-oauthlib = "*"
 python-dateutil = "*"
 pytz = "*"
+aioftp = "*"
 
 [dev-packages]
 

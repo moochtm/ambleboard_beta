@@ -1,4 +1,5 @@
 import asyncio
+import aioftp
 import hashlib
 import importlib
 import logging
@@ -9,7 +10,7 @@ import socket
 import ssl
 import time
 import uuid
-from urllib.parse import quote_plus, unquote
+from urllib.parse import quote_plus, unquote, urlparse
 from datetime import datetime, timedelta
 import sys
 
@@ -176,6 +177,7 @@ class Server:
         # A bit messy but some image_urls contain their own params, this approach just carves off /image_proxy?url=
 
         image_url = str(request.rel_url)[17:]
+
         # get image_proxy folder path
         dp = os.path.join(".", "image_proxy")
         if not os.path.exists(dp):
@@ -193,21 +195,35 @@ class Server:
         # Now focus on the requested file
         # TODO: Find a way to stop concurrent downloads caused by multiple GETs in small time window.
         #   e.g. a lock file?
-        async with ClientSession() as session:
-            url = image_url
-            url_hash = hashlib.sha1(url.encode("UTF-8")).hexdigest()
-            fp = os.path.join(dp, url_hash + ".jpeg")
-            if not os.path.exists(fp):
-                logger.info(f"Image Proxy downloading image: url={url}, path={fp}")
-                async with session.get(url) as resp:
-                    if resp.status == 200:
-                        fp = os.path.join(dp, url_hash + ".jpeg")
-                        async with aiofiles.open(fp, mode="wb+") as f:
-                            await f.write(await resp.read())
-                            await f.close()
-            resp = web.FileResponse(fp)
-            logger.info(f"Image Proxy sending image: url={url}, path={fp}")
-            return resp
+        url = image_url
+        url_hash = hashlib.sha1(url.encode("UTF-8")).hexdigest()
+        fp = os.path.join(dp, url_hash + ".jpeg")
+        logger.info(f"Image Proxy downloading image: url={url}, path={fp}")
+
+        parsed_url = urlparse(image_url)
+        logger.info(f"Parsed URL: {parsed_url}")
+
+        if parsed_url.scheme == 'http':
+            async with ClientSession() as session:
+                if not os.path.exists(fp):
+                    async with session.get(url) as resp:
+                        if resp.status == 200:
+                            fp = os.path.join(dp, url_hash + ".jpeg")
+                            async with aiofiles.open(fp, mode="wb+") as f:
+                                await f.write(await resp.read())
+                                await f.close()
+
+        elif parsed_url.scheme == 'ftp':
+            logger.info(f"Downloading Path: {parsed_url.path}")
+            client = aioftp.Client()
+            await client.connect(parsed_url.hostname)
+            if parsed_url.username is not None:
+                await client.login(parsed_url.username, parsed_url.password)
+            await client.download(parsed_url.path, fp, write_into=True)
+
+        resp = web.FileResponse(fp)
+        logger.info(f"Image Proxy sending image: url={url}, path={fp}")
+        return resp
 
     ########################################################################
     # JINJA2 FILTERS
