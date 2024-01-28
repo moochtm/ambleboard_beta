@@ -260,7 +260,7 @@ class Server:
         if "subscription_id" not in data_dict:
             logger.warning("No subscription_id entry in msg data.")
             return
-        logger.info(f"Message: {data_dict}")
+        logger.info(f"Message received: {data_dict}")
 
         # lazy load widget module
         widget_module = importlib.import_module(

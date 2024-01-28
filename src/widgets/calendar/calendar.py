@@ -52,6 +52,12 @@ class Widget(BaseWidget):
                     await send_please_authenticate(provider)
                     return
                 calendar["id"] = await self._get_calendar_id_microsoft(calendar)
+                if not calendar["id"]:
+                    msg = {"msg": f"Missing calendar: {self._kwargs[calendar['name']]}"}
+                    logger.warning(msg)
+                    await self._render_widget_html_and_send_to_queue(msg)
+                    await asyncio.sleep(0)
+                    return
                 calendar["get_events"] = self._get_calendar_events_microsoft
             else:
                 msg = {
@@ -89,12 +95,16 @@ class Widget(BaseWidget):
         result = await self.async_request(
             calendar, "get", f"https://graph.microsoft.com/v1.0/me/calendars"
         )
+        print("GET https://graph.microsoft.com/v1.0/me/calendars")
         print(result)
+        print(self._kwargs[calendar["name"]])
         calendar = [
             cal
             for cal in result["value"]
             if cal["name"] == self._kwargs[calendar["name"]]
         ]
+        if len(calendar) == 0:
+            return False
         logger.debug(f"Calendar name={calendar[0]['name']}, id={calendar[0]['id']}")
         return calendar[0]["id"]
 
@@ -106,6 +116,7 @@ class Widget(BaseWidget):
         """
         /messages?$filter=ReceivedDateTime ge 2017-04-01 and receivedDateTime lt 2017-05-01
         """
+        print("_get_calendar_events_microsoft")
         now = datetime.now()
         from_date = (now - timedelta(days=31)).strftime("%Y-%m-%d")
         to_date = (now + timedelta(days=90)).strftime("%Y-%m-%d")
