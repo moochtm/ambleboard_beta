@@ -6,11 +6,13 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+# Zlq8Q~M8Xs7bCZB328lW0AGW3EcEgIPaFgi1Falz
+# 7f4e4094-fb4a-4c15-85c7-c4a6b35c9f9e
 
 class MicrosoftAsyncOauthClient(AsyncOauthClient):
     provider = "microsoft"
     client_id = "6999faa8-1bd2-4804-89fd-9cb5341ddc56"
-    client_secret = "H0o7Q~0xWSGQc7Ks5teP9dGOIpsgxObyG~RcA"
+    client_secret = "Zlq8Q~M8Xs7bCZB328lW0AGW3EcEgIPaFgi1Falz"
     scope = ["User.Read", "User.Read.All", "Calendars.Read", "Group.Read.All"]
     authority = None
 
