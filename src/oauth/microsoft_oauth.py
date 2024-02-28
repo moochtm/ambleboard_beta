@@ -96,7 +96,12 @@ async def main():
         print("TOKEN LOADED")
 
     if need_to_auth_flow:
+        print("TESTING AUTHENTICATION FROM FLOW")
         client.authenticate_from_flow()
+
+    print("TESTING AUTHENTICATION FROM REFRESH TOKEN")
+    client.authenticate_from_refresh_token()
+
 
     response = await client.async_request("get", "https://graph.microsoft.com/v1.0/me")
     if not response:
