@@ -25,6 +25,7 @@ class MicrosoftAsyncOauthClient(AsyncOauthClient):
         return True
 
     def authenticate_from_flow(self):
+        logger.info("Trying to auth using flow.")
         app = ConfidentialClientApplication(
             client_id=self.client_id,
             client_credential=self.client_secret,
@@ -57,6 +58,8 @@ class MicrosoftAsyncOauthClient(AsyncOauthClient):
 
     def authenticate_from_refresh_token(self):
         logger.info("Trying to auth using refresh token.")
+        logger.info(f"client id: `{self.client_id}")
+        logger.info(f"client secret: `{self.client_secret}")
         app = ConfidentialClientApplication(
             client_id=self.client_id,
             client_credential=self.client_secret,
@@ -68,6 +71,7 @@ class MicrosoftAsyncOauthClient(AsyncOauthClient):
         )
         logger.info(f"Token: {token}")
         if "error" in token:
+            logger.warning("Error when trying to auth using refresh token.")
             return False
         self.save_token(token)
         return True
@@ -101,7 +105,6 @@ async def main():
 
     print("TESTING AUTHENTICATION FROM REFRESH TOKEN")
     client.authenticate_from_refresh_token()
-
 
     response = await client.async_request("get", "https://graph.microsoft.com/v1.0/me")
     if not response:
