@@ -58,7 +58,8 @@ class Widget(BaseWidget):
             # helper: add current_track_exists:
             context["av_transport"]["current_track_exists"] = (
                 False
-                if context["av_transport"]["current_track_meta_data"]["title"].strip()
+                if context["av_transport"]["current_track_meta_data"] == ""
+                or context["av_transport"]["current_track_meta_data"]["title"].strip()
                 == ""
                 else True
             )
