@@ -2,6 +2,7 @@ import aiopubsub
 from src.widgets.widget.widget import Widget as BaseWidget
 import asyncio
 import aioftp
+import random
 
 import logging
 
@@ -56,6 +57,10 @@ class Widget(BaseWidget):
 
             # Get list of files
             files = await client.list()
+
+            # Shuffle files
+            random.shuffle(files)
+
             #for f in files:
             #    print(f[0])
             #    await client.download(f[0], f[0], write_into=True)
