@@ -1,6 +1,7 @@
 import aiopubsub
 import asyncio
 from src.widgets.widget.widget import Widget as BaseWidget
+import json
 
 import soco
 from soco import events_asyncio
@@ -75,6 +76,7 @@ class Widget(BaseWidget):
 
             # add device info to context
             # https://docs.python-soco.com/en/latest/api/soco.core.html
+            # this code is duplicated below
             context["device_info"] = {
                 "player_name": device.player_name,
                 "ip_address": device.ip_address,
@@ -98,7 +100,25 @@ class Widget(BaseWidget):
                 f"SONOS rendering_control event received: device={device.player_name}, event.variables={event.variables}"
             )
             context["rendering_control"] = event.variables
-            logging.debug(f"Created context: {context}")
+
+
+            # add device info to context
+            # https://docs.python-soco.com/en/latest/api/soco.core.html
+            # this code is duplicated above
+            context["device_info"] = {
+                "player_name": device.player_name,
+                "ip_address": device.ip_address,
+                "play_mode": device.play_mode,
+                "shuffle": device.shuffle,
+                "repeat": device.repeat,
+                "mute": device.mute,
+                "volume": device.volume,
+                "is_playing_radio": device.is_playing_radio,
+                "is_playing_tv": device.is_playing_tv,
+                "music_source": device.music_source,
+            }
+
+            logging.debug(f"Created context: {json.dumps(context, indent=4)}")
 
             publisher.publish(publish_key, context)
             type(self).worker_prev_update[str(publisher.prefix + publish_key)] = context
