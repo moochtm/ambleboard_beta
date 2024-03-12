@@ -203,7 +203,7 @@ class Server:
         parsed_url = urlparse(image_url)
         logger.info(f"Parsed URL: {parsed_url}")
 
-        if parsed_url.scheme == 'http':
+        if parsed_url.scheme == 'http' or parsed_url.scheme == 'https':
             async with ClientSession() as session:
                 if not os.path.exists(fp):
                     async with session.get(url) as resp:
