@@ -238,7 +238,8 @@ class Server:
             else None
         )
 
-        if image_w is not None and image_h is not None:
+        # TODO! FIX THIS ITS DISABLED AT THE MOMENT!
+        if image_w is not None and image_h is not None and False:
 
             size = int(image_w), int(image_h)
             outfile = os.path.splitext(fp)[0] + f"_{image_w}x{image_h}.jpeg"
