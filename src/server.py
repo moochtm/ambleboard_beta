@@ -13,6 +13,7 @@ import uuid
 from urllib.parse import quote_plus, unquote, urlparse, parse_qs
 from datetime import datetime, timedelta
 import sys
+from PIL import Image
 
 import aiofiles
 from aiohttp import web, ClientSession
@@ -178,13 +179,6 @@ class Server:
         query = urlparse(main_url).query
         image_url = unquote(parse_qs(query)['url'][0])
 
-        if 'w' in parse_qs(query).keys():
-            image_w = parse_qs(query)['w'][0]
-            print(image_w)
-        if 'h' in parse_qs(query).keys():
-            image_h = parse_qs(query)['h'][0]
-            print(image_h)
-
         # below is the old way that we determined the image_url
         # image_url = unquote(str(request.rel_url)[17:])
 
@@ -208,28 +202,54 @@ class Server:
         url = image_url
         url_hash = hashlib.sha1(url.encode("UTF-8")).hexdigest()
         fp = os.path.join(dp, url_hash + ".jpeg")
-        logger.info(f"Image Proxy downloading image: url={url}, path={fp}")
 
-        parsed_url = urlparse(image_url)
-        logger.info(f"Parsed URL: {parsed_url}")
+        if not os.path.exists(fp):
 
-        if parsed_url.scheme == 'http' or parsed_url.scheme == 'https':
-            async with ClientSession() as session:
-                if not os.path.exists(fp):
-                    async with session.get(url) as resp:
-                        if resp.status == 200:
-                            fp = os.path.join(dp, url_hash + ".jpeg")
-                            async with aiofiles.open(fp, mode="wb+") as f:
-                                await f.write(await resp.read())
-                                await f.close()
+            logger.info(f"Image Proxy downloading image: url={url}, path={fp}")
 
-        elif parsed_url.scheme == 'ftp':
-            logger.info(f"Downloading Path: {parsed_url.path}")
-            client = aioftp.Client()
-            await client.connect(parsed_url.hostname)
-            if parsed_url.username is not None:
-                await client.login(parsed_url.username, parsed_url.password)
-            await client.download(parsed_url.path, fp, write_into=True)
+            parsed_url = urlparse(image_url)
+            logger.info(f"Parsed URL: {parsed_url}")
+
+            if parsed_url.scheme == 'http' or parsed_url.scheme == 'https':
+                async with ClientSession() as session:
+                    if not os.path.exists(fp):
+                        async with session.get(url) as resp:
+                            if resp.status == 200:
+                                fp = os.path.join(dp, url_hash + ".jpeg")
+                                async with aiofiles.open(fp, mode="wb+") as f:
+                                    await f.write(await resp.read())
+                                    await f.close()
+
+            elif parsed_url.scheme == 'ftp':
+                logger.info(f"Downloading Path: {parsed_url.path}")
+                client = aioftp.Client()
+                await client.connect(parsed_url.hostname)
+                if parsed_url.username is not None:
+                    await client.login(parsed_url.username, parsed_url.password)
+                await client.download(parsed_url.path, fp, write_into=True)
+
+        # handle requests for resized image
+        image_w = (
+            parse_qs(query)['w'][0] if 'w' in parse_qs(query).keys()
+            else None
+        )
+        image_h = (
+            parse_qs(query)['h'][0] if 'h' in parse_qs(query).keys()
+            else None
+        )
+
+        if image_w is not None and image_h is not None:
+
+            size = int(image_w), int(image_h)
+            outfile = os.path.splitext(fp)[0] + f"_{image_w}x{image_h}.jpeg"
+            if not os.path.exists(outfile):
+                try:
+                    im = Image.open(fp)
+                    im.thumbnail(size, Image.Resampling.LANCZOS)
+                    im.save(outfile, "JPEG")
+                except IOError:
+                    print("cannot create thumbnail for '%s'" % fp)
+            fp = outfile
 
         resp = web.FileResponse(fp)
         logger.info(f"Image Proxy sending image: url={url}, path={fp}")

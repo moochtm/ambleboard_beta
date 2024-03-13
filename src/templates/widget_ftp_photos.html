@@ -84,7 +84,9 @@ img.bg {
 
 <script>
 function update_img_src(img){
-    img.src = img.src + "&w=" + $(window).width() + "&h=" + $(window).height()
+    width = window.screen.width * window.devicePixelRatio
+    height = window.screen.height * window.devicePixelRatio
+    img.src = img.src + "&w=" + width + "&h=" + height;
     }
 update_img_src(document.getElementById("preload_image"));
 update_img_src(document.getElementById("current_image"));
