@@ -78,9 +78,19 @@ img.bg {
 </style>
 <div>{{msg}}</div>
 {% if current_item is defined %}
-<img class="bg vignette" src="{{preload_item | image_proxy}}">
-<img class="bg vignette" src="{{current_item | image_proxy}}">
-<img class="fade-in bg vignette" src="{{next_item | image_proxy}}">
+<img id="preload_image" class="bg vignette" src="{{preload_item | image_proxy}}">
+<img id="current_image" class="bg vignette" src="{{current_item | image_proxy}}">
+<img id="next_image" class="fade-in bg vignette" src="{{next_item | image_proxy}}">
+
+<script>
+function update_img_src(img){
+    img.src = img.src + "&w=" + $(window).width() + "&h=" + $(window).height()
+    }
+update_img_src(document.getElementById("preload_image"));
+update_img_src(document.getElementById("current_image"));
+update_img_src(document.getElementById("next_image"));
+</script>
+
 <div class="vignette"></div>
 
 <div class="w3-bottom w3-cell-row black-opacity-max">

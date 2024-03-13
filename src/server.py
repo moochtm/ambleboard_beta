@@ -10,7 +10,7 @@ import socket
 import ssl
 import time
 import uuid
-from urllib.parse import quote_plus, unquote, urlparse
+from urllib.parse import quote_plus, unquote, urlparse, parse_qs
 from datetime import datetime, timedelta
 import sys
 
@@ -174,9 +174,19 @@ class Server:
         Image_url is downloaded if hasn't been already, and then returned
         This ensures all image_proxy are served from the same domain (better browser compatibility)
         """
-        # A bit messy but some image_urls contain their own params, this approach just carves off /image_proxy?url=
+        main_url = str(request.rel_url)
+        query = urlparse(main_url).query
+        image_url = unquote(parse_qs(query)['url'][0])
 
-        image_url = str(request.rel_url)[17:]
+        if 'w' in parse_qs(query).keys():
+            image_w = parse_qs(query)['w'][0]
+            print(image_w)
+        if 'h' in parse_qs(query).keys():
+            image_h = parse_qs(query)['h'][0]
+            print(image_h)
+
+        # below is the old way that we determined the image_url
+        # image_url = unquote(str(request.rel_url)[17:])
 
         # get image_proxy folder path
         dp = os.path.join(".", "image_proxy")
@@ -230,7 +240,8 @@ class Server:
 
     def _get_image_proxy_url(self, url):
         return (
-            f"{self.protocol}://{self.host}:{self.port}/image_proxy?url={unquote(url)}"
+            # f"{self.protocol}://{self.host}:{self.port}/image_proxy?url={unquote(url)}"
+            f"{self.protocol}://{self.host}:{self.port}/image_proxy?url={quote_plus(url)}"
         )
         # return f"{self.protocol}://{self.host}:{self.port}/image_proxy?url={unquote(url)}"
 
