@@ -13,7 +13,7 @@ import uuid
 from urllib.parse import quote_plus, unquote, urlparse, parse_qs
 from datetime import datetime, timedelta
 import sys
-from PIL import Image
+# from PIL import Image
 
 import aiofiles
 from aiohttp import web, ClientSession
@@ -239,18 +239,18 @@ class Server:
         )
 
         # TODO! FIX THIS ITS DISABLED AT THE MOMENT!
-        if image_w is not None and image_h is not None and False:
-
-            size = int(image_w), int(image_h)
-            outfile = os.path.splitext(fp)[0] + f"_{image_w}x{image_h}.jpeg"
-            if not os.path.exists(outfile):
-                try:
-                    im = Image.open(fp)
-                    im.thumbnail(size, Image.Resampling.LANCZOS)
-                    im.save(outfile, "JPEG")
-                except IOError:
-                    print("cannot create thumbnail for '%s'" % fp)
-            fp = outfile
+        # if image_w is not None and image_h is not None and False:
+        #
+        #     size = int(image_w), int(image_h)
+        #     outfile = os.path.splitext(fp)[0] + f"_{image_w}x{image_h}.jpeg"
+        #     if not os.path.exists(outfile):
+        #         try:
+        #             im = Image.open(fp)
+        #             im.thumbnail(size, Image.Resampling.LANCZOS)
+        #             im.save(outfile, "JPEG")
+        #         except IOError:
+        #             print("cannot create thumbnail for '%s'" % fp)
+        #     fp = outfile
 
         resp = web.FileResponse(fp)
         logger.info(f"Image Proxy sending image: url={url}, path={fp}")
