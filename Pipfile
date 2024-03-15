@@ -19,7 +19,6 @@ requests-oauthlib = "*"
 python-dateutil = "*"
 pytz = "*"
 aioftp = "*"
-pillow = "*"
 
 [dev-packages]
 
