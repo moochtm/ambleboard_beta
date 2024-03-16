@@ -260,6 +260,7 @@ class Server:
             image = cv2.imread(fp)
             image = cv2.resize(image, (int(image_w), int(image_h)), interpolation=cv2.INTER_LINEAR)
             cv2.imwrite(outfile, image)
+            fp = outfile
 
         resp = web.FileResponse(fp)
         logger.info(f"Image Proxy sending image: url={url}, path={fp}")
