@@ -13,9 +13,6 @@ import uuid
 from urllib.parse import quote_plus, unquote, urlparse, parse_qs
 from datetime import datetime, timedelta
 import sys
-# from PIL import Image
-import cv2
-import numpy as np
 
 import aiofiles
 from aiohttp import web, ClientSession
@@ -37,6 +34,21 @@ logging.basicConfig(
     ],
 )
 logger = logging.getLogger(__name__)
+
+# TRY TO IMPORT OPENCV
+OPENCV_IMPORTED = True
+try:
+    import cv2
+    logger.info(f"OpenCV imported successfully.")
+except ImportError as e:
+    logger.error(f"Error importing OpenCV: {str(e)}")
+    OPENCV_IMPORTED = False
+# try:
+#     import numpy as np
+#     logger.info(f"Numpty imported successfully.")
+# except ImportError as e:
+#     logger.error(f"Error importing Numpy: {str(e)}")
+#     OPENCV_IMPORTED = False
 
 # GET PROJECT ROOT FOLDER
 PROJECT_ROOT = pathlib.Path(__file__).parent
@@ -255,7 +267,7 @@ class Server:
         #     fp = outfile
 
         # Try OpenCV for image resizing
-        if image_w is not None and image_h is not None:
+        if image_w is not None and image_h is not None and OPENCV_IMPORTED:
             outfile = os.path.splitext(fp)[0] + f"_{image_w}x{image_h}.jpeg"
             image = cv2.imread(fp)
             image = cv2.resize(image, (int(image_w), int(image_h)), interpolation=cv2.INTER_LINEAR)
