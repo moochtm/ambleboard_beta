@@ -19,7 +19,7 @@ requests-oauthlib = "*"
 python-dateutil = "*"
 pytz = "*"
 aioftp = "*"
-opencv-python-headless = "==3.4.18.65"
+opencv-python-headless = "*"
 
 [dev-packages]
 
