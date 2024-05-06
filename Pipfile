@@ -4,7 +4,6 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-aiohttp = "==3.8.1"
 jinja2 = "*"
 aiohttp-jinja2 = "*"
 soco = "*"
@@ -20,6 +19,15 @@ python-dateutil = "*"
 pytz = "*"
 aioftp = "*"
 opencv-python-headless = "*"
+aiohttp = "==3.8.1"
+paho-mqtt = "*"
+asyncio-mqtt = "*"
+gmqtt = "*"
+uvloop = "*"
+aiologger = "*"
+ics = "*"
+nest-asyncio = "*"
+arrow = "*"
 
 [dev-packages]
 
