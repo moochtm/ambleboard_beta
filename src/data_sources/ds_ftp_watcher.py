@@ -5,7 +5,7 @@ import json
 
 
 class DataSource(BaseDataSource):
-    name = "ftp watcher"
+    type = "ftp watcher"
     wait_time = 30
     mqtt_broker_host = "192.168.1.210"
     user = "ambleboard"
@@ -16,7 +16,7 @@ class DataSource(BaseDataSource):
         # Create client
         client = aioftp.Client()
         # Connect to host
-        await client.connect('192.168.1.210')
+        await client.connect("192.168.1.210")
         # Login
         await client.login(user="ambleboard", password="ambleboard")
         # Go to target folder
@@ -28,11 +28,11 @@ class DataSource(BaseDataSource):
         return files
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
+
     async def main():
         ds = DataSource()
         ds_task = asyncio.create_task(ds.start())
         await ds_task
-
 
     asyncio.run(main())
