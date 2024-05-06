@@ -12,7 +12,7 @@ class DataSource(BaseDataSource):
     type = "calendar"
     url = ""
     count = 0
-    wait_time = 1
+    wait_time = 30
 
     async def get_data(self):
         client = ClientSession()
@@ -27,7 +27,6 @@ class DataSource(BaseDataSource):
                     "name": event.name,
                     "begin": event.begin.format(),
                     "end": event.end.format(),
-                    "created": event.created.format(),
                     "all-day": event.all_day,
                     "description": event.description,
                     "location": event.location,

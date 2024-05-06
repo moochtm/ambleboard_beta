@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 class DataSource(BaseDataSource):
     type = "weather"
-    wait_time = 5
+    wait_time = 300
     url = "https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/W5%201AZ?unitGroup=us&key=9V95BA9RMBRB3FJQNJRG6KHW9&contentType=json"
 
     async def get_data(self):

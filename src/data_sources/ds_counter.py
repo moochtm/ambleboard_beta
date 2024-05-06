@@ -8,6 +8,7 @@ logger = logging.getLogger(__name__)
 
 class DataSource(BaseDataSource):
     type = "counter"
+    wait_time = 5
     count = 0
 
     async def get_data(self):
