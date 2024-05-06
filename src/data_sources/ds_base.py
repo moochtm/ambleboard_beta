@@ -2,10 +2,8 @@ import asyncio
 from gmqtt import Client as MQTTClient
 import logging
 import logging.handlers
-from aiologger import Logger
 from queue import Queue
 import sys
-from signal import SIGINT, SIGTERM
 
 logging.basicConfig(
     format="%(asctime)s | %(levelname)-7s | %(module)-20s: %(message)s",
