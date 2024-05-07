@@ -101,7 +101,7 @@ class BaseDataSource:
     def send_message(self, payload):
         if self.mqtt_connected:
             self.mqtt_client.publish(
-                f"data sources/{self.mqtt_topic}", payload=payload, qos=1
+                f"data sources/{self.mqtt_topic}", payload=payload, qos=1, retain=True
             )
             logger.debug("published data")
             self.on_message_sent(payload=payload)

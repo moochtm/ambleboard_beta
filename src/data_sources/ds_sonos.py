@@ -9,6 +9,7 @@ import json
 import logging
 
 logger = logging.getLogger(__name__)
+logger.setLevel(level=logging.INFO)
 
 
 class DataSource(BaseDataSource):
@@ -112,13 +113,22 @@ class DataSource(BaseDataSource):
             payload = context
             self.send_message(payload)
 
-        sub = await self.device.avTransport.subscribe(auto_renew=True)
+        sub = await self.device.avTransport.subscribe(
+            requested_timeout=600, auto_renew=True
+        )
         sub.callback = av_transport_event_handler
-        rendering_sub = await self.device.renderingControl.subscribe(auto_renew=True)
+        rendering_sub = await self.device.renderingControl.subscribe(
+            requested_timeout=600, auto_renew=True
+        )
         rendering_sub.callback = rendering_control_event_handler
 
         while True:
-            await asyncio.sleep(0)
+            # renew subscriptions every 5 minutes
+            await asyncio.sleep(300)
+            await sub.renew()
+            sub.callback = av_transport_event_handler
+            await rendering_sub.renew()
+            rendering_sub.callback = rendering_control_event_handler
 
 
 async def main():
