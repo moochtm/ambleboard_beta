@@ -9,7 +9,7 @@ import json
 import logging
 
 logger = logging.getLogger(__name__)
-logger.setLevel(level=logging.INFO)
+logger.setLevel(level=logging.DEBUG)
 
 
 class DataSource(BaseDataSource):
@@ -123,12 +123,15 @@ class DataSource(BaseDataSource):
         rendering_sub.callback = rendering_control_event_handler
 
         while True:
+
             # renew subscriptions every 5 minutes
-            await asyncio.sleep(300)
-            await sub.renew()
-            sub.callback = av_transport_event_handler
-            await rendering_sub.renew()
-            rendering_sub.callback = rendering_control_event_handler
+            # print(sub.time_left)
+            await asyncio.sleep(0)
+            # continue
+            # await sub.renew()
+            # sub.callback = av_transport_event_handler
+            # await rendering_sub.renew()
+            # rendering_sub.callback = rendering_control_event_handler
 
 
 async def main():
@@ -138,6 +141,7 @@ async def main():
         print(device.player_name)
         ds = DataSource(device=device)
         tasks.append(asyncio.create_task(ds.start()))
+        break
     await asyncio.gather(*tasks)
 
 

@@ -4,6 +4,7 @@ import logging
 import logging.handlers
 from queue import Queue
 import sys
+import arrow
 
 logging.basicConfig(
     format="%(asctime)s | %(levelname)-7s | %(module)-20s: %(message)s",
@@ -93,7 +94,7 @@ class BaseDataSource:
         while True:
             data = await self.get_data()
             logger.debug("received data")
-            payload = {"data": data}
+            payload = {"timestamp": arrow.utcnow().format(), "data": data}
             logger.debug(payload)
             self.send_message(payload)
             await asyncio.sleep(self.wait_time)
