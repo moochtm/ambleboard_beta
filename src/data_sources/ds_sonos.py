@@ -141,7 +141,6 @@ async def main():
         print(device.player_name)
         ds = DataSource(device=device)
         tasks.append(asyncio.create_task(ds.start()))
-        break
     await asyncio.gather(*tasks)
 
 
