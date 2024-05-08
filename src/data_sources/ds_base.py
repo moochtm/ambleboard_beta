@@ -101,7 +101,7 @@ class BaseDataSource:
 
     def send_message(self, payload):
         if self.mqtt_connected:
-            payload["timestamp"] = (arrow.utcnow().format(),)
+            payload["timestamp"] = arrow.utcnow().format()
             self.mqtt_client.publish(
                 f"data sources/{self.mqtt_topic}", payload=payload, qos=1, retain=True
             )
