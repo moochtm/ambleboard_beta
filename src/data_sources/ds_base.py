@@ -94,13 +94,14 @@ class BaseDataSource:
         while True:
             data = await self.get_data()
             logger.debug("received data")
-            payload = {"timestamp": arrow.utcnow().format(), "data": data}
+            payload = {"data": data}
             logger.debug(payload)
             self.send_message(payload)
             await asyncio.sleep(self.wait_time)
 
     def send_message(self, payload):
         if self.mqtt_connected:
+            payload["timestamp"] = (arrow.utcnow().format(),)
             self.mqtt_client.publish(
                 f"data sources/{self.mqtt_topic}", payload=payload, qos=1, retain=True
             )
