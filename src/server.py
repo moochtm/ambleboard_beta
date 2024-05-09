@@ -35,10 +35,12 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+
 # TRY TO IMPORT OPENCV
 OPENCV_IMPORTED = True
 try:
     import cv2
+
     logger.info(f"OpenCV imported successfully.")
 except ImportError as e:
     logger.error(f"Error importing OpenCV: {str(e)}")
@@ -177,6 +179,7 @@ class Server:
                 for widget in widgets:
                     logger.info("Cancelling widget.")
                     widget.cancel()
+                    # await widget
                 del request.app["subscriptions"][subscription_id]
                 logger.info(f"Goodbye, subscription {subscription_id}!")
         return response
@@ -191,7 +194,7 @@ class Server:
         """
         main_url = str(request.rel_url)
         query = urlparse(main_url).query
-        image_url = unquote(parse_qs(query)['url'][0])
+        image_url = unquote(parse_qs(query)["url"][0])
 
         # below is the old way that we determined the image_url
         # image_url = unquote(str(request.rel_url)[17:])
@@ -224,7 +227,7 @@ class Server:
             parsed_url = urlparse(image_url)
             logger.info(f"Parsed URL: {parsed_url}")
 
-            if parsed_url.scheme == 'http' or parsed_url.scheme == 'https':
+            if parsed_url.scheme == "http" or parsed_url.scheme == "https":
                 async with ClientSession() as session:
                     if not os.path.exists(fp):
                         async with session.get(url) as resp:
@@ -234,7 +237,7 @@ class Server:
                                     await f.write(await resp.read())
                                     await f.close()
 
-            elif parsed_url.scheme == 'ftp':
+            elif parsed_url.scheme == "ftp":
                 logger.info(f"Downloading Path: {parsed_url.path}")
                 client = aioftp.Client()
                 await client.connect(parsed_url.hostname)
@@ -243,14 +246,8 @@ class Server:
                 await client.download(parsed_url.path, fp, write_into=True)
 
         # handle requests for resized image
-        image_w = (
-            parse_qs(query)['w'][0] if 'w' in parse_qs(query).keys()
-            else None
-        )
-        image_h = (
-            parse_qs(query)['h'][0] if 'h' in parse_qs(query).keys()
-            else None
-        )
+        image_w = parse_qs(query)["w"][0] if "w" in parse_qs(query).keys() else None
+        image_h = parse_qs(query)["h"][0] if "h" in parse_qs(query).keys() else None
 
         # TODO! FIX THIS ITS DISABLED AT THE MOMENT!
         # if image_w is not None and image_h is not None and False:
@@ -270,7 +267,9 @@ class Server:
         if image_w is not None and image_h is not None and OPENCV_IMPORTED:
             outfile = os.path.splitext(fp)[0] + f"_{image_w}x{image_h}.jpeg"
             image = cv2.imread(fp)
-            image = cv2.resize(image, (int(image_w), int(image_h)), interpolation=cv2.INTER_LINEAR)
+            image = cv2.resize(
+                image, (int(image_w), int(image_h)), interpolation=cv2.INTER_LINEAR
+            )
             cv2.imwrite(outfile, image)
             fp = outfile
 
@@ -304,6 +303,7 @@ class Server:
         """
 
         data_dict = await request.json()
+        logger.info(f"Message received: {data_dict}")
 
         if "data-widget" not in data_dict:
             logger.warning("No data-widget entry in msg data.")
@@ -314,7 +314,6 @@ class Server:
         if "subscription_id" not in data_dict:
             logger.warning("No subscription_id entry in msg data.")
             return
-        logger.info(f"Message received: {data_dict}")
 
         # lazy load widget module
         widget_module = importlib.import_module(

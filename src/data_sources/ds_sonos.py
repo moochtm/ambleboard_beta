@@ -2,14 +2,32 @@ import asyncio
 from ds_base import BaseDataSource
 import soco
 from soco import events_asyncio
+import logging
+from logging.handlers import TimedRotatingFileHandler
+import os
+import sys
 
 soco.config.EVENTS_MODULE = events_asyncio
-import json
-import arrow
-import logging
+
+# SET UP LOGGING
+logging.basicConfig(
+    format="%(asctime)s | %(levelname)-7s | %(module)-20s: %(message)s",
+    level=logging.DEBUG,
+    datefmt="%H:%M:%S",
+    handlers=[
+        logging.StreamHandler(sys.stdout),
+        TimedRotatingFileHandler(
+            filename=os.path.splitext(os.path.basename(__file__))[0] + ".log",
+            when="H",
+            interval=6,
+            backupCount=12,
+        ),
+    ],
+)
+logging.getLogger("soco").setLevel(level=logging.DEBUG)
 
 logger = logging.getLogger(__name__)
-logger.setLevel(level=logging.DEBUG)
+logger.info("testing logging")
 
 
 class DataSource(BaseDataSource):
@@ -106,7 +124,7 @@ class DataSource(BaseDataSource):
                 "music_source": self.device.music_source,
             }
 
-            logger.debug(f"Created context: {json.dumps(context, indent=4)}")
+            # logger.debug(f"Created context: {json.dumps(context, indent=4)}")
 
             # publisher.publish(publish_key, context)
             # type(self).worker_prev_update[str(publisher.prefix + publish_key)] = context
@@ -123,15 +141,10 @@ class DataSource(BaseDataSource):
         rendering_sub.callback = rendering_control_event_handler
 
         while True:
-
             # renew subscriptions every 5 minutes
-            # print(sub.time_left)
-            await asyncio.sleep(0)
-            # continue
-            # await sub.renew()
-            # sub.callback = av_transport_event_handler
-            # await rendering_sub.renew()
-            # rendering_sub.callback = rendering_control_event_handler
+            await asyncio.sleep(300)
+            await sub.renew()
+            await rendering_sub.renew()
 
 
 async def main():
