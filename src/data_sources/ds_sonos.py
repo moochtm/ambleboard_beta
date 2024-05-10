@@ -142,8 +142,6 @@ class DataSource(BaseDataSource):
             rendering_sub.callback = rendering_control_event_handler
             # every 5 minutes, unsubscribe and then subscribe again
             await asyncio.sleep(300)
-            # await sub.renew()
-            # await rendering_sub.renew()
             await sub.unsubscribe()
             await rendering_sub.unsubscribe()
             await asyncio.sleep(5)
