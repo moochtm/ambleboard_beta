@@ -15,6 +15,7 @@ class DataSource(BaseDataSource):
     wait_time = 30
 
     async def get_data(self):
+
         client = ClientSession()
         response = await client.get(self.url)
         result = await response.text()

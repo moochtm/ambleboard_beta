@@ -9,16 +9,16 @@ import arrow
 # SET UP LOGGING
 logging.basicConfig(
     format="%(asctime)s | %(levelname)-7s | %(module)-20s: %(message)s",
-    level=logging.DEBUG,
+    level=logging.INFO,
     datefmt="%H:%M:%S",
     handlers=[
         logging.StreamHandler(sys.stdout),
-        TimedRotatingFileHandler(
-            filename=os.path.splitext(os.path.basename(__file__))[0] + ".log",
-            when="H",
-            interval=6,
-            backupCount=12,
-        ),
+        # TimedRotatingFileHandler(
+        #     filename=os.path.splitext(os.path.basename(__file__))[0] + ".log",
+        #     when="H",
+        #     interval=6,
+        #     backupCount=12,
+        # ),
     ],
 )
 logger = logging.getLogger(__name__)
@@ -27,38 +27,30 @@ import nest_asyncio
 
 nest_asyncio.apply()
 
+import socket
 
-def setup_logging_queue() -> None:
-    """Move log handlers to a separate thread.
 
-    Replace handlers on the root logger with a LocalQueueHandler,
-    and start a logging.QueueListener holding the original
-    handlers.
-
+def internet(host="8.8.8.8", port=53, timeout=3):
     """
-    queue = Queue()
-    root = logging.getLogger()
-
-    handlers = []
-
-    handler = logging.handlers.QueueHandler(queue)
-    root.addHandler(handler)
-    for h in root.handlers[:]:
-        if h is not handler:
-            root.removeHandler(h)
-            handlers.append(h)
-
-    listener = logging.handlers.QueueListener(
-        queue, *handlers, respect_handler_level=True
-    )
-    listener.start()
+    Host: 8.8.8.8 (google-public-dns-a.google.com)
+    OpenPort: 53/tcp
+    Service: domain (DNS/TCP)
+    """
+    try:
+        socket.setdefaulttimeout(timeout)
+        socket.socket(socket.AF_INET, socket.SOCK_STREAM).connect((host, port))
+        return True
+    except socket.error as ex:
+        print(ex)
+        return False
 
 
 class BaseDataSource:
     #######################
     type = "base"
-    wait_time = 1
+    wait_time = 5
     mqtt_connected = False
+    local_network_required = True
 
     def __init__(self, name=None):
         self.name = name
@@ -96,11 +88,14 @@ class BaseDataSource:
 
         await self.mqtt_client.connect(broker_host)
         while True:
-            data = await self.get_data()
-            logger.debug("received data")
-            payload = {"data": data}
-            logger.debug(payload)
-            self.send_message(payload)
+            if internet():
+                data = await self.get_data()
+                logger.debug("received data")
+                payload = {"data": data}
+                logger.debug(payload)
+                self.send_message(payload)
+            else:
+                logger.warning("no internet, will try again next time...")
             await asyncio.sleep(self.wait_time)
 
     def send_message(self, payload):

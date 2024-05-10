@@ -1,5 +1,5 @@
 import asyncio
-from ds_base import BaseDataSource
+from ds_base import BaseDataSource, internet
 import soco
 from soco import events_asyncio
 import logging
@@ -16,12 +16,12 @@ logging.basicConfig(
     datefmt="%H:%M:%S",
     handlers=[
         logging.StreamHandler(sys.stdout),
-        TimedRotatingFileHandler(
-            filename=os.path.splitext(os.path.basename(__file__))[0] + ".log",
-            when="H",
-            interval=6,
-            backupCount=12,
-        ),
+        # TimedRotatingFileHandler(
+        #     filename=os.path.splitext(os.path.basename(__file__))[0] + ".log",
+        #     when="H",
+        #     interval=6,
+        #     backupCount=12,
+        # ),
     ],
 )
 # logging.getLogger("soco").setLevel(level=logging.DEBUG)
@@ -131,30 +131,31 @@ class DataSource(BaseDataSource):
             payload = context
             self.send_message(payload)
 
+        sub = await self.device.avTransport.subscribe(
+            requested_timeout=600, auto_renew=True
+        )
+        sub.callback = av_transport_event_handler
+        rendering_sub = await self.device.renderingControl.subscribe(
+            requested_timeout=600, auto_renew=True
+        )
+        rendering_sub.callback = rendering_control_event_handler
+
         while True:
-            sub = await self.device.avTransport.subscribe(
-                requested_timeout=600, auto_renew=True
-            )
-            sub.callback = av_transport_event_handler
-            rendering_sub = await self.device.renderingControl.subscribe(
-                requested_timeout=600, auto_renew=True
-            )
-            rendering_sub.callback = rendering_control_event_handler
-            # every 5 minutes, unsubscribe and then subscribe again
-            await asyncio.sleep(300)
-            await sub.unsubscribe()
-            await rendering_sub.unsubscribe()
-            await asyncio.sleep(5)
+            await asyncio.sleep(0)
 
 
 async def main():
 
-    tasks = []
-    for device in soco.discovery.discover():
-        print(device.player_name)
-        ds = DataSource(device=device)
-        tasks.append(asyncio.create_task(ds.start()))
-    await asyncio.gather(*tasks)
+    while True:
+        if internet():
+            tasks = []
+            for device in soco.discovery.discover():
+                print(device.player_name)
+                ds = DataSource(device=device)
+                tasks.append(asyncio.create_task(ds.start()))
+            await asyncio.sleep(300)
+            for task in tasks:
+                task.cancel()
 
 
 if __name__ == "__main__":
