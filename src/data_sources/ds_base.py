@@ -1,17 +1,24 @@
 import asyncio
 from gmqtt import Client as MQTTClient
 import logging
-import logging.handlers
+from logging.handlers import TimedRotatingFileHandler
 from queue import Queue
-import sys
+import sys, os
 import arrow
 
+# SET UP LOGGING
 logging.basicConfig(
     format="%(asctime)s | %(levelname)-7s | %(module)-20s: %(message)s",
-    level=logging.INFO,
+    level=logging.DEBUG,
     datefmt="%H:%M:%S",
     handlers=[
         logging.StreamHandler(sys.stdout),
+        TimedRotatingFileHandler(
+            filename=os.path.splitext(os.path.basename(__file__))[0] + ".log",
+            when="H",
+            interval=6,
+            backupCount=12,
+        ),
     ],
 )
 logger = logging.getLogger(__name__)
@@ -71,12 +78,9 @@ class BaseDataSource:
         tasks = []
         try:
             tasks = [asyncio.create_task(self.main(self.mqtt_broker_host))]
-            # gathering = await asyncio.gather(tasks)
-            # print(gathering.count())
             while True:
                 await asyncio.sleep(0)
         except asyncio.CancelledError:
-            # logger.info(f"{self.name} stopping datasource")
             for task in tasks:
                 task.cancel()
         except Exception as e:

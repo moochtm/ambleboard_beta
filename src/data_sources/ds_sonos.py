@@ -24,7 +24,7 @@ logging.basicConfig(
         ),
     ],
 )
-logging.getLogger("soco").setLevel(level=logging.DEBUG)
+# logging.getLogger("soco").setLevel(level=logging.DEBUG)
 
 logger = logging.getLogger(__name__)
 logger.info("testing logging")
@@ -131,20 +131,22 @@ class DataSource(BaseDataSource):
             payload = context
             self.send_message(payload)
 
-        sub = await self.device.avTransport.subscribe(
-            requested_timeout=600, auto_renew=True
-        )
-        sub.callback = av_transport_event_handler
-        rendering_sub = await self.device.renderingControl.subscribe(
-            requested_timeout=600, auto_renew=True
-        )
-        rendering_sub.callback = rendering_control_event_handler
-
         while True:
-            # renew subscriptions every 5 minutes
+            sub = await self.device.avTransport.subscribe(
+                requested_timeout=600, auto_renew=True
+            )
+            sub.callback = av_transport_event_handler
+            rendering_sub = await self.device.renderingControl.subscribe(
+                requested_timeout=600, auto_renew=True
+            )
+            rendering_sub.callback = rendering_control_event_handler
+            # every 5 minutes, unsubscribe and then subscribe again
             await asyncio.sleep(300)
-            await sub.renew()
-            await rendering_sub.renew()
+            # await sub.renew()
+            # await rendering_sub.renew()
+            await sub.unsubscribe()
+            await rendering_sub.unsubscribe()
+            await asyncio.sleep(5)
 
 
 async def main():
