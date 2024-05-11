@@ -151,7 +151,7 @@ async def main():
             for device in soco.discovery.discover():
                 ds = DataSource(device=device)
                 tasks.append(asyncio.create_task(ds.start()))
-            await asyncio.sleep(300)
+            await asyncio.sleep(600)
             for task in tasks:
                 task.cancel()
 

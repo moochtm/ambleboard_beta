@@ -1,5 +1,5 @@
 import asyncio
-from src.utils.mqtt_client import MQTTClient
+from utils.mqtt_client import MQTTClient
 import logging
 from logging.handlers import TimedRotatingFileHandler
 from queue import Queue
