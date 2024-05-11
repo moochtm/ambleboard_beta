@@ -3,6 +3,7 @@ from ds_base import BaseDataSource, internet
 import soco
 from soco import events_asyncio
 import logging
+import arrow
 from logging.handlers import TimedRotatingFileHandler
 import os
 import sys
@@ -12,7 +13,7 @@ soco.config.EVENTS_MODULE = events_asyncio
 # SET UP LOGGING
 logging.basicConfig(
     format="%(asctime)s | %(levelname)-7s | %(module)-20s: %(message)s",
-    level=logging.DEBUG,
+    level=logging.INFO,
     datefmt="%H:%M:%S",
     handlers=[
         logging.StreamHandler(sys.stdout),
@@ -24,7 +25,7 @@ logging.basicConfig(
         # ),
     ],
 )
-# logging.getLogger("soco").setLevel(level=logging.DEBUG)
+logging.getLogger("soco").setLevel(level=logging.DEBUG)
 
 logger = logging.getLogger(__name__)
 logger.info("testing logging")
@@ -36,7 +37,9 @@ class DataSource(BaseDataSource):
 
     def __init__(self, device):
         self.device = device
+        super().__init__()
         self.name = device.player_name
+        self.mqtt_topic = f"data sources/{self.type}/{self.name}"
 
     async def get_data(self):
         context = {"av_transport": {}, "rendering_control": {}}
@@ -95,12 +98,10 @@ class DataSource(BaseDataSource):
                 "music_source": self.device.music_source,
             }
 
-            logger.info(f"Sonos Created context: {context}")
+            self.log(logging.INFO, f"Sonos Created context: {context}")
 
-            # publisher.publish(publish_key, context)
-            # type(self).worker_prev_update[str(publisher.prefix + publish_key)] = context
-            payload = context
-            self.send_message(payload)
+            payload = {"data": context, "timestamp": arrow.utcnow().format()}
+            self.log(logging.DEBUG, payload)
 
         def rendering_control_event_handler(event):
             logger.info(
@@ -124,12 +125,10 @@ class DataSource(BaseDataSource):
                 "music_source": self.device.music_source,
             }
 
-            # logger.debug(f"Created context: {json.dumps(context, indent=4)}")
-
-            # publisher.publish(publish_key, context)
-            # type(self).worker_prev_update[str(publisher.prefix + publish_key)] = context
-            payload = context
-            self.send_message(payload)
+            self.log(logging.INFO, f"Sonos Created context: {context}")
+            payload = {"data": context, "timestamp": arrow.utcnow().format()}
+            self.log(logging.DEBUG, payload)
+            self.mqtt_client.send_message(payload)
 
         sub = await self.device.avTransport.subscribe(
             requested_timeout=600, auto_renew=True
@@ -150,7 +149,6 @@ async def main():
         if internet():
             tasks = []
             for device in soco.discovery.discover():
-                print(device.player_name)
                 ds = DataSource(device=device)
                 tasks.append(asyncio.create_task(ds.start()))
             await asyncio.sleep(300)
