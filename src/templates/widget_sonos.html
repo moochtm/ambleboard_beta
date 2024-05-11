@@ -41,7 +41,6 @@ context = {
         <img class="w3-hide" src="{{av_transport.next_track_meta_data.album_art_uri | image_proxy}}">
         {% endif %}
         {% endif %}
-
         <div style="position:absolute;left:0px;bottom:0px;width:100%;background: linear-gradient(0deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.6) 70%, rgba(0,0,0,0) 100%);padding:50px 8px 8px 8px">
             <table>
                <tr>
@@ -52,11 +51,7 @@ context = {
                         <i class="fal fa-pause" style="margin-right: 8px;"></i>
                         {% endif %}
                     </td>
-                    <td></td>
-                </tr>
-                <tr>
-                    <td align="center">
-                        {% if device_info.mute == true %}
+                    <td>{% if device_info.mute == true %}
                         <i class="fal fa-volume-mute" style="margin-right: 8px;"></i>
                         {% elif device_info.volume >= 50 %}
                         <i class="fal fa-volume-up" style="margin-right: 8px;"></i>
@@ -66,20 +61,22 @@ context = {
                         <i class="fal fa-volume-down" style="margin-right: 8px;"></i>
                         {% elif device_info.volume == 0 %}
                         <i class="fal fa-volume-off" style="margin-right: 8px;"></i>
-                        {% endif %}
-                    </td>
-                    <td></td>
+                        {% endif %}</td>
+                </tr>
+                <tr>
+
                 </tr>
                 <tr>
                     <td align="center"><i class="fal fa-speaker" style="margin-right: 8px;"></i></td>
-                    <td>{{device_info.player_name}}
-
-
-                    </td>
+                    <td>{{device_info.player_name}}</td>
                 </tr>
                 <tr>
                     <td align="center"><i class="fal fa-music" style="margin-right: 8px;"></i></td>
-                    <td>{{av_transport.current_track_meta_data.title}}</td>
+                    {% if device_info.is_playing_radio == true %}
+                        <td>{{av_transport.current_track_meta_data.stream_content}}</td>
+                    {% else %}
+                        <td>{{av_transport.current_track_meta_data.title}}</td>
+                    {% endif %}
                 </tr>
                 <tr>
                     <td align="center"><i class="fal fa-user" style="margin-right: 8px;"></i></td>
@@ -88,12 +85,12 @@ context = {
                 <tr>
                     <td align="center"><i class="fal fa-compact-disc" style="margin-right: 8px;"></i></td>
                     <td>{{av_transport.current_track_meta_data.album}}</td>
-                </tr>
+                </tr></table>
             <div></div>
             <div></div>
-            <div>{{av_transport.current_track_meta_data.stream_content}}</div>
+<!--            <div>{{av_transport.current_track_meta_data.stream_content}}</div>-->
             {% if av_transport.current_track_meta_data.radio_show != None %}
-            <!--<div><i class="fal fa-radio" style="margin-right: 8px;"></i>{{av_transport.current_track_meta_data.radio_show}}</div>-->
+            <div><i class="fal fa-radio" style="margin-right: 8px;"></i>{{av_transport.enqueued_transport_uri_meta_data.title}}</div>
             {% endif %}
             {% if av_transport.current_track_meta_data.creator != "" %}
             <div></div>
@@ -101,7 +98,7 @@ context = {
             {% if av_transport.current_track_meta_data.album != None %}
             <div></div>
             {% endif %}
-            </table>
+
         </div>
     </div>
 {% else %}
