@@ -1,5 +1,10 @@
 import asyncio
+from datetime import datetime, timedelta
+import importlib
+from urllib.parse import quote_plus
+
 from gmqtt import Client as MQTTClient
+from src.utils.mqtt_client import MQTTClient
 import jinja2
 import json
 import logging
@@ -12,7 +17,7 @@ import uuid
 
 logging.basicConfig(
     format="%(asctime)s | %(levelname)-7s | %(module)-20s: %(message)s",
-    level=logging.INFO,
+    level=logging.DEBUG,
     datefmt="%H:%M:%S",
     handlers=[
         logging.StreamHandler(sys.stdout),
@@ -24,68 +29,33 @@ logger.setLevel(logging.DEBUG)
 nest_asyncio.apply()
 
 
-class WidgetMQTTClient:
-    def __init__(self, name, topic, queue):
-        self.name = name
-        self.topic = topic
-        self.queue = queue
-        self.mqtt_client = MQTTClient(uuid.uuid4().__str__()[:4])
-        self.mqtt_client.on_connect = self.on_connect
-        self.mqtt_client.on_message = self.on_message_received
-        self.mqtt_client.on_disconnect = self.on_disconnect
-        self.mqtt_client.on_subscribe = self.on_subscribe
-        self.mqtt_broker_host = "localhost"
-
-    async def connect(self):
-        try:
-            await self.mqtt_client.connect(self.mqtt_broker_host)
-            while True:
-                await asyncio.sleep(0)
-        except asyncio.CancelledError:
-            logger.info(f"Stopping mqtt client")
-            self.mqtt_client.unsubscribe(self.topic)
-            await self.mqtt_client.disconnect()
-        except Exception as e:
-            print("main exception: ", e)
-
-    async def disconnect(self):
-        await self.mqtt_client.disconnect()
-
-    def on_connect(self, client, flags, rc, properties):
-        logger.info(f"Connected")
-        self.mqtt_client.subscribe(f"{self.topic}", qos=0)
-
-    def on_message_received(self, client, topic, payload, qos, properties):
-        payload = json.loads(payload)
-        logger.info(f"Message Received: {payload}")
-        payload["data_source_id"] = self.name
-        self.queue.put_nowait(payload)
-
-    def on_disconnect(self, client, packet, exc=None):
-        logger.info(f"Disconnected")
-
-    def on_subscribe(self, client, mid, qos, properties):
-        logger.info(f"Subscribed.")
-
-
 class Widget:
     #######################
     type = "base_widget"
     update_on_mqtt_message = True
     update_on_refresh_interval = False
 
-    def __init__(self, queue, target, **kwargs):
+    def __init__(self, queue, target, protocol, host, port, **kwargs):
 
         # Setup things common to all Widgets
         self._queue = queue
         self._target = target
+        self.protocol = protocol
+        self.host = host
+        self.port = port
         self._kwargs = kwargs
         self._refresh_interval = (
             kwargs["data-refresh-interval"] if "data-refresh-interval" in kwargs else 0
         )
 
         # Find and load the template HTML for the Widget
-        self._template_html_path = os.path.splitext(__file__)[0] + ".html"
+        m = importlib.import_module(self.__module__)
+        # print(os.getcwd())
+        # print(os.path.dirname(m.__file__))
+        # print(os.path.dirname(__file__))
+        # print(os.path.relpath(os.path.dirname(m.__file__), os.getcwd()))
+
+        self._template_html_path = os.path.splitext(m.__file__)[0] + ".html"
         if not os.path.exists(self._template_html_path):
             logger.error("Template HTML file doesn't exist")
             msg = {
@@ -95,8 +65,25 @@ class Widget:
             self.__render_widget_html_and_send_to_server_queue(msg)
             return
         else:
+            # JINJA INIT
+            jinja2_filters = {
+                "image_proxy": self._get_image_proxy_url,
+                "convert_date_time": self._convert_date_time,
+                "today": self._today,
+            }
+            env = jinja2.Environment(
+                loader=jinja2.FileSystemLoader(
+                    os.path.relpath(os.path.dirname(m.__file__), os.getcwd())
+                ),
+                autoescape=True,
+                enable_async=True,
+            )
+            # print(os.path.splitext(os.path.basename(m.__file__))[0] + ".html")
+            env.filters = jinja2_filters
             with open(self._template_html_path, "r") as f:
-                self.jinja2_template = jinja2.Template(f.read(), enable_async=True)
+                self.jinja2_template = env.get_template(
+                    os.path.splitext(os.path.basename(m.__file__))[0] + ".html"
+                )
 
         self.data = {}
         self.context = {}
@@ -108,7 +95,7 @@ class Widget:
             # Create MQTT clients if there are any data-source-topics
             ds_topics = [arg for arg in self._kwargs if "data-source-topic" in arg]
             for ds_topic in ds_topics:
-                client = WidgetMQTTClient(
+                client = MQTTClient(
                     name=ds_topic.replace("-", "_"),
                     topic=self._kwargs[ds_topic],
                     queue=queue,
@@ -152,7 +139,7 @@ class Widget:
             queue.task_done()
 
     def update_context(self):
-        self.context = self.data
+        self.context = self.data["data_source_topic"]
 
     async def __render_widget_html_and_send_to_server_queue(self):
         logger.info(f"Rendering context: {self.context}")
@@ -172,19 +159,40 @@ class Widget:
         )
         await self._queue.put(json.dumps(payload))
 
+    ########################################################################
+    # JINJA2 FILTERS
+
+    def _get_image_proxy_url(self, url):
+        return (
+            # f"{self.protocol}://{self.host}:{self.port}/image_proxy?url={unquote(url)}"
+            f"{self.protocol}://{self.host}:{self.port}/image_proxy?url={quote_plus(url)}"
+        )
+        # return f"{self.protocol}://{self.host}:{self.port}/image_proxy?url={unquote(url)}"
+
+    def _convert_date_time(self, date_time_str, in_format, out_format):
+        date_time_obj = datetime.strptime(date_time_str, in_format)
+        return date_time_obj.strftime(out_format)
+
+    def _today(self, input, out_format="%Y-%m-%d", offset_days=0):
+        date_time = datetime.now() + timedelta(days=offset_days)
+        return date_time.strftime(out_format)
+
 
 if __name__ == "__main__":
 
     async def main():
         queue = asyncio.Queue()
         target = "test target"
+        protocol = "http"
+        host = "localhost"
+        port = "8080"
         tasks = []
         for i in range(1):
             kwargs = {
                 "data-refresh-interval": 0,
                 "data-source-topic": "data sources/counter/None",
             }
-            datasource = Widget(queue, target, **kwargs)
+            datasource = Widget(queue, target, protocol, host, port, **kwargs)
             tasks.append(asyncio.create_task(datasource.start()))
 
         async def queue_worker():
@@ -204,16 +212,16 @@ if __name__ == "__main__":
         # for task in tasks:
         #     asyncio.ensure_future(task)
 
-        for i in range(5):
-            print(i)
-            await asyncio.sleep(1)
-
-        for task in tasks:
-            print("cancelling task")
-            task.cancel()
-            await task
+        # for i in range(5):
+        #     print(i)
+        #     await asyncio.sleep(1)
+        #
+        # for task in tasks:
+        #     print("cancelling task")
+        #     task.cancel()
+        #     await task
 
         while True:
-            continue
+            await asyncio.sleep(0)
 
     asyncio.run(main())
