@@ -101,9 +101,7 @@ class BaseDataSource:
         return "data"
 
     def log(self, log_level, msg):
-        logger.log(
-            level=log_level, msg=f"{self.mqtt_topic}/mqtt_client[{self.name}]: {msg}"
-        )
+        logger.log(level=log_level, msg=f"{self.mqtt_topic}: {msg}")
 
 
 if __name__ == "__main__":

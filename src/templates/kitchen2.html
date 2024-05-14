@@ -27,6 +27,35 @@
     <div style="position:absolute; width:42%; left:35%; top:2%">
         <div class="widget" id="weather" data-widget="weather" data-location="W5 1AZ" data-days="5" data-refresh-interval="3600"></div>
     </div>
+    <div style="position:absolute; width:42%; left:35%; top:20%">
+        <div class="widget" id="weather2" data-widget="weather2" data-location="W5 1AZ" data-days="5" data-refresh-interval="3600">
+            <div class="w3-container w3-round-large black-opacity-max w3-padding">
+    <div>{{msg}}</div>
+    <div class="w3-cell-row">
+        {% if current is defined %}
+        <div class="w3-cell" style="vertical-align:middle">
+            <div style="font-size:3vw">{{current.temp_c}}°<img src="https:{{current.condition.icon}}"></div>
+            <div>{{current.condition.text}}</div>
+            <div>Feels like {{current.feelslike_c}}°</div>
+        </div>
+        {% endif %}
+        <div class="w3-cell" style="vertical-align:middle; border-left:1px solid rgba(255,255,255,0.2)">
+            <div class="w3-cell-row">
+                {% if forecast is defined %}
+                {% for day in forecast.forecastday %}
+                <div class="w3-cell w3-center">
+                    <div class="">{{day.date | convert_date_time('%Y-%m-%d', '%a')}}</div>
+                    <div><img src="https:{{day.day.condition.icon}}"></div>
+                        <div>{{day.day.maxtemp_c}}° - {{day.day.mintemp_c}}°</div>
+                </div>
+                {% endfor %}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+        </div>
+    </div>
     <div style="position:absolute; width:98%; height: 50%; left:1%; top:45%">
         <div class="widget" id="calendar" style="height:100%"
              data-widget="calendar" data-template="agenda_5_days" data-timezone=""
@@ -40,12 +69,13 @@
             elementVar.setAttribute("data-timezone-offset", tz_offset);
         </script>
     </div>
+
     <div style="position:absolute; width:30%; left:2%; top:2%">
         <div id="time" class="time massive weight-300 line-height-1"></div>
         <div id="date" class="date w3-xxlarge line-height-1"></div>
     </div>
     <div style="position:absolute; width:21%; height:21%; left:78%; top:2%">
-        <div class="widget" data-source-topic="data sources/sonos/Kitchen" data-widget="sonos2" id="sonos1">::sonos widget::</div>
+        <div class="widget" data-channel="Kitchen" data-widget="sonos" id="sonos1">::sonos widget::</div>
     </div>
         <!--<div style="position:absolute; width:15%; left:55%;">
                   <div class="widget" data-channel="Front Room" data-widget="sonos" id="sonos2">::sonos widget::</div>

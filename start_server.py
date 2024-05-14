@@ -1,4 +1,4 @@
-import argparse
+import argparse, os
 
 from src.server import Server
 
@@ -13,6 +13,10 @@ if __name__ == "__main__":
     Run this script as follows:
     `python start_server.py OPTIONS"`
     """
+
+    print(os.path.dirname(__file__))
+    print(os.getcwd())
+
     parser = argparse.ArgumentParser(description="Start the server")
     # parser.add_argument("config", metavar="C", help="path to the config file")
     parser.add_argument(
@@ -35,6 +39,7 @@ if __name__ == "__main__":
         action="store_true",
         help="Start HTTP server instead of HTTPS",
     )
+    parser.set_defaults(http=True)
     parser.set_defaults(feature=False)
     parser.add_argument("--debug", dest="debug", action="store_true", help="Debug mode")
     parser.set_defaults(debug=False)

@@ -326,6 +326,47 @@ class Server:
         # add widget instance to session widgets
         request.app["subscriptions"][data_dict["subscription_id"]]["widgets"].append(
             asyncio.create_task(
+                widget_module.Widget(
+                    request=request,
+                    queue=queue,
+                    protocol=self.protocol,
+                    host=self.host,
+                    port=self.port,
+                    **data_dict,
+                ).start()
+            )
+        )
+        return web.Response(status=200)
+
+    async def _widget_handler_old(self, request):
+        """
+        Handles requests to initialise a widget
+        """
+
+        data_dict = await request.json()
+        logger.info(f"Message received: {data_dict}")
+
+        if "data-widget" not in data_dict:
+            logger.warning("No data-widget entry in msg data.")
+            return
+        if "target" not in data_dict:
+            logger.warning("No target entry in msg data.")
+            return
+        if "subscription_id" not in data_dict:
+            logger.warning("No subscription_id entry in msg data.")
+            return
+
+        # lazy load widget module
+        widget_module = importlib.import_module(
+            f".{data_dict['data-widget']}.{data_dict['data-widget']}",
+            package="src.widgets",
+        )
+
+        # get queue
+        queue = request.app["subscriptions"][data_dict["subscription_id"]]["queue"]
+        # add widget instance to session widgets
+        request.app["subscriptions"][data_dict["subscription_id"]]["widgets"].append(
+            asyncio.create_task(
                 widget_module.Widget(request=request, queue=queue, **data_dict).start()
             )
         )

@@ -99,9 +99,9 @@ class DataSource(BaseDataSource):
             }
 
             self.log(logging.INFO, f"Sonos Created context: {context}")
-
             payload = {"data": context, "timestamp": arrow.utcnow().format()}
             self.log(logging.DEBUG, payload)
+            self.mqtt_client.send_message(payload)
 
         def rendering_control_event_handler(event):
             logger.info(

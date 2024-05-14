@@ -2,6 +2,7 @@ import aiopubsub
 import asyncio
 from src.widgets.widget.widget import Widget as BaseWidget
 import json
+import arrow
 
 import soco
 from soco import events_asyncio
@@ -100,7 +101,6 @@ class Widget(BaseWidget):
                 f"SONOS rendering_control event received: device={device.player_name}, event.variables={event.variables}"
             )
             context["rendering_control"] = event.variables
-
 
             # add device info to context
             # https://docs.python-soco.com/en/latest/api/soco.core.html
