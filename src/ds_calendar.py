@@ -1,8 +1,10 @@
 import asyncio
 from aiohttp import ClientSession
 from ds_base import BaseDataSource
-from ics import Calendar
-
+from icalendar import Calendar
+import recurring_ical_events
+from datetime import datetime, timedelta
+import arrow
 import logging
 
 logger = logging.getLogger(__name__)
@@ -20,23 +22,46 @@ class DataSource(BaseDataSource):
         response = await client.get(self.url)
         result = await response.text()
 
-        cal = Calendar(result)
-        events = []
-        for event in cal.timeline:
-            events.append(
+        calendar = Calendar.from_ical(result)
+        # Get a list of events, including recurrences
+        events = recurring_ical_events.of(calendar).between(
+            datetime(2024, 1, 1), datetime(2025, 1, 1)
+        )
+
+        data = []
+        for event in events:
+            summary = event.get("SUMMARY")
+            start = arrow.get(str(event.get("DTSTART").dt))
+            end = arrow.get(str(event.get("DTEND").dt))
+            description = event.get("DESCRIPTION")
+            location = event.get("LOCATION")
+            all_day = (
+                True
+                if start.format("YYYY-MM-DD") != end.format("YYYY-MM-DD")
+                else False
+            )
+            active_days = [start.format("YYYY-MM-DD")]
+            if all_day:
+                current_d = start
+                while current_d.format("YYYY-MM-DD") != end.format("YYYY-MM-DD"):
+                    current_d = current_d.shift(days=+1)
+                    active_days.append(current_d.format("YYYY-MM-DD"))
+
+            data.append(
                 {
-                    "name": event.name,
-                    "begin": event.begin.format(),
-                    "end": event.end.format(),
-                    "all-day": event.all_day,
-                    "description": event.description,
-                    "location": event.location,
+                    "name": summary,
+                    "begin": start.format(),
+                    "end": end.format(),
+                    "all-day": all_day,
+                    "duration_days": (end - start).days,
+                    "active_days": active_days,
+                    "description": description,
+                    "location": location,
                 }
             )
 
         await client.close()
-
-        return events
+        return data
 
 
 if __name__ == "__main__":

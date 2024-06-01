@@ -1,0 +1,243 @@
+<div class="w3-container w3-round-large black-opacity-max w3-padding">
+    <div>{{msg}}</div>
+    <div class="w3-cell-row">
+        {% if currentConditions is defined %}
+        <div class="w3-cell" style="vertical-align:middle">
+            <div style="font-size:3vw; padding:20%" >{{currentConditions.temp}}°<img src="/static/weather_icons/3-svg-mono-white/{{currentConditions.icon}}.svg"></div>
+            <div>{{currentConditions.conditions}}</div>
+            <div>Feels like {{currentConditions.feelslike}}°</div>
+        </div>
+        {% endif %}
+        <div class="w3-cell" style="vertical-align:middle; border-left:1px solid rgba(255,255,255,0.2)">
+            <div class="w3-cell-row">
+                {% if days is defined %}
+                {% for n in range(5) %}
+
+                <div class="w3-cell w3-center">
+                    <div class="">{{days[n].datetime | convert_date_time('%Y-%m-%d', '%a')}}</div>
+                    <div style="padding:20%"><img src="/static/weather_icons/3-svg-mono-white/{{days[n].icon}}.svg"></div>
+                        <div>{{days[n].tempmax}}° - {{days[n].tempmin}}°</div>
+                </div>
+
+                {% endfor %}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!--
+
+{
+ "queryCost": 1,
+ "latitude": 51.5253,
+ "longitude": -0.30514,
+ "resolvedAddress": "W5 1AZ, London, England, United Kingdom",
+ "address": "w5 1az",
+ "timezone": "Europe/London",
+ "tzoffset": 1,
+ "description": "Similar temperatures continuing with a chance of rain tomorrow & Saturday.",
+ "days": [
+  {
+   "datetime": "2024-05-15",
+   "datetimeEpoch": 1715727600,
+   "tempmax": 69,
+   "tempmin": 55.3,
+   "temp": 61.4,
+   "feelslikemax": 69,
+   "feelslikemin": 55.3,
+   "feelslike": 61.4,
+   "dew": 50.4,
+   "humidity": 69.7,
+   "precip": 0.076,
+   "precipprob": 100,
+   "precipcover": 16.67,
+   "preciptype": [
+    "rain"
+   ],
+   "snow": 0,
+   "snowdepth": 0,
+   "windgust": 21.7,
+   "windspeed": 10.7,
+   "winddir": 146.8,
+   "pressure": 1004,
+   "cloudcover": 60.2,
+   "visibility": 6.9,
+   "solarradiation": 245.1,
+   "solarenergy": 21.1,
+   "uvindex": 9,
+   "severerisk": 10,
+   "sunrise": "05:08:46",
+   "sunriseEpoch": 1715746126,
+   "sunset": "20:47:29",
+   "sunsetEpoch": 1715802449,
+   "moonphase": 0.25,
+   "conditions": "Rain, Partially cloudy",
+   "description": "Partly cloudy throughout the day with early morning rain.",
+   "icon": "rain",
+   "stations": [
+    "EGWU",
+    "EGLL",
+    "D4121",
+    "EGLC"
+   ],
+   "source": "comb",
+   "hours": [
+    {
+     "datetime": "12:00:00",
+     "datetimeEpoch": 1715770800,
+     "temp": 65.5,
+     "feelslike": 65.5,
+     "humidity": 56.07,
+     "dew": 49.4,
+     "precip": 0,
+     "precipprob": 0,
+     "snow": 0,
+     "snowdepth": 0,
+     "preciptype": null,
+     "windgust": 19.2,
+     "windspeed": 9.2,
+     "winddir": 159,
+     "pressure": 1004.4,
+     "visibility": 6.2,
+     "cloudcover": 61,
+     "solarradiation": 225,
+     "solarenergy": 0.8,
+     "uvindex": 2,
+     "severerisk": 10,
+     "conditions": "Partially cloudy",
+     "icon": "partly-cloudy-day",
+     "stations": [
+      "EGWU",
+      "EGLL",
+      "D4121",
+      "EGLC"
+     ],
+     "source": "obs"
+    },
+    {
+     "datetime": "13:00:00",
+     "datetimeEpoch": 1715774400,
+     "temp": 65.5,
+     "feelslike": 65.5,
+     "humidity": 53.87,
+     "dew": 48.4,
+     "precip": 0,
+     "precipprob": 0,
+     "snow": 0,
+     "snowdepth": 0,
+     "preciptype": null,
+     "windgust": 19.9,
+     "windspeed": 9.8,
+     "winddir": 147,
+     "pressure": 1004.1,
+     "visibility": 6.2,
+     "cloudcover": 65.3,
+     "solarradiation": 288,
+     "solarenergy": 1,
+     "uvindex": 3,
+     "severerisk": 10,
+     "conditions": "Partially cloudy",
+     "icon": "partly-cloudy-day",
+     "stations": [
+      "EGWU",
+      "EGLL",
+      "D4121",
+      "EGLC"
+     ],
+     "source": "obs"
+    }
+   ]
+  }
+ ],
+ "alerts": [],
+ "stations": {
+  "EGWU": {
+   "distance": 8415,
+   "latitude": 51.55,
+   "longitude": -0.42,
+   "useCount": 0,
+   "id": "EGWU",
+   "name": "EGWU",
+   "quality": 50,
+   "contribution": 0
+  },
+  "EGLC": {
+   "distance": 24764,
+   "latitude": 51.5,
+   "longitude": 0.05,
+   "useCount": 0,
+   "id": "EGLC",
+   "name": "EGLC",
+   "quality": 50,
+   "contribution": 0
+  },
+  "D8816": {
+   "distance": 12717,
+   "latitude": 51.615,
+   "longitude": -0.418,
+   "useCount": 0,
+   "id": "D8816",
+   "name": "DW8816 Northwood UK",
+   "quality": 0,
+   "contribution": 0
+  },
+  "EGLL": {
+   "distance": 11233,
+   "latitude": 51.48,
+   "longitude": -0.45,
+   "useCount": 0,
+   "id": "EGLL",
+   "name": "EGLL",
+   "quality": 50,
+   "contribution": 0
+  },
+  "D4121": {
+   "distance": 8268,
+   "latitude": 51.463,
+   "longitude": -0.371,
+   "useCount": 0,
+   "id": "D4121",
+   "name": "DW4121 London Heathow UK",
+   "quality": 0,
+   "contribution": 0
+  }
+ },
+ "currentConditions": {
+  "datetime": "21:26:00",
+  "datetimeEpoch": 1715804760,
+  "temp": 61.2,
+  "feelslike": 61.2,
+  "humidity": 61.8,
+  "dew": 48,
+  "precip": 0,
+  "precipprob": 0,
+  "snow": 0,
+  "snowdepth": 0,
+  "preciptype": null,
+  "windgust": 2,
+  "windspeed": 2.1,
+  "winddir": 345,
+  "pressure": 1006,
+  "visibility": 6.2,
+  "cloudcover": 0,
+  "solarradiation": 0,
+  "solarenergy": 0,
+  "uvindex": 0,
+  "conditions": "Clear",
+  "icon": "clear-night",
+  "stations": [
+   "D8816",
+   "EGLL",
+   "D4121"
+  ],
+  "source": "obs",
+  "sunrise": "05:08:46",
+  "sunriseEpoch": 1715746126,
+  "sunset": "20:47:29",
+  "sunsetEpoch": 1715802449,
+  "moonphase": 0.25
+ }
+}
+
+-->

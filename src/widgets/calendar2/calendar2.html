@@ -1,0 +1,131 @@
+{% macro agenda_day_header(events, weather, offset_days) -%}
+    <div class="w3-cell" style="width:20%">
+        <div class="w3-cell-row" style="padding: 8px">
+            <div class="w3-cell" style="font-size: 2.2em">
+                {{ ""|today(out_format="%a", offset_days=offset_days) }}<br>
+                {{ ""|today(out_format="%-d %b", offset_days=offset_days) }}
+            </div>
+            <div class="w3-cell" style="width: 60%; vertical-align:middle; text-align:center;">
+                <div class="w3-cell-row">
+                    <img style="max-height: 3vh;" src="/static/weather_icons/3-svg-mono-white/{{weather.days[offset_days+1].icon}}.svg">
+                </div>
+                <div class="w3-cell-row">
+                    {{weather.days[offset_days+1].tempmax}}° - {{weather.days[offset_days+1].tempmin}}°
+                </div>
+            </div>
+        </div>
+    </div>
+{%- endmacro %}
+
+{% macro all_day_events(events, offset_days) -%}
+    {% for event in events %}
+        {% if (event['all-day'] == True) %}
+            {% if (offset_days == 0) and (""|today(offset_days=offset_days) in event.active_days) %}
+                {{ all_day_event(event, offset_days) }}
+            {% elif (""|today(offset_days=offset_days) == event.active_days[0]) %}
+                {{ all_day_event(event, offset_days) }}
+            {% endif %}
+        {% endif %}
+    {% endfor %}
+{%- endmacro %}
+
+{% macro all_day_event(event, offset_days) -%}
+    <div class="w3-cell-row" style="padding: 4px;">
+        {% for n in range(offset_days) %}
+            <div class="w3-cell" style="width:20%"></div>
+        {% endfor %}
+        <div class="w3-cell"
+        style="border-left-color:#ffffff30;
+        background-color:#ffffff20;
+        border-left-width: 0.3em;
+        border-radius: 0.15em;
+        border-left-style: solid;
+        padding: 4px 8px 4px 8px;
+        width:{{ (event.duration_days - (""|today(offset_days=offset_days))|delta_days(event.begin)) * 20 | max(5) }}%
+        ">
+            <div class="w3-large">{{ event.name }}</div>
+        </div>
+        {% for n in range(5 - offset_days - event.duration_days  + (""|today(offset_days=offset_days))|delta_days(event.begin)| max(0) ) %}
+            <div class="w3-cell" style="width:20%"></div>
+        {% endfor %}
+    </div>
+{%- endmacro %}
+
+{% macro get_icon(event) -%}
+    {% set icon = "" %}
+    {% if 'birthday' in event.name.lower() %}{% set icon = 'fal fa-birthday-cake' %}{% endif %}
+    {% if 'swimming' in event.name.lower() %}{% set icon = 'fal fa-swimming-pool' %}{% endif %}
+    {% if 'rondo' in event.calendar.lower() %}{% set icon = 'fal fa-music' %}{% endif %}
+    {% if 'choir' in event.name.lower() %}{% set icon = 'fal fa-music' %}{% endif %}
+    {% if 'football' in event.name.lower() %}{% set icon = 'fal fa-futbol' %}{% endif %}
+    {% if 'tutor' in event.name.lower() %}{% set icon = 'fal fa-user-graduate' %}{% endif %}
+    {% if 'call' in event.name.lower() %}{% set icon = 'fal fa-phone' %}{% endif %}
+    {% if 'sailing' in event.name.lower() %}{% set icon = 'fal fa-anchor' %}{% endif %}
+    {% if icon != "" %}
+        <div class="w3-cell" style="width:3%;background-color:#ffffff20;
+             margin: 8px;"></div>
+        <div class="w3-cell w3-display-container" style="width:15%;
+             background-color:#ffffff20;
+             padding: 4px;"><div class="w3-display-right w3-padding">
+        <i class="{{icon}}" style="margin-right: 0px; font-size: 2vw"></i>
+        </div></div>
+    {% endif %}
+{%- endmacro %}
+
+{% macro agenda_day(events, offset_days) -%}
+    <div class="w3-cell" style="width:20%;">
+        {% for event in events %}
+            {% if ""|today(offset_days=offset_days) in event.begin %}
+                {% if event['all-day'] == False %}
+                    {{ agenda_event(event) }}
+                {% endif %}
+            {% endif %}
+        {% endfor %}
+    </div>
+{%- endmacro %}
+
+{% macro agenda_event(event) -%}
+    <div class="w3-cell-row" style="padding: 8px;">
+        <div class="w3-cell"
+             style="border-left-color:#ffffff30;
+             background-color:#ffffff20;
+             border-left-width: 0.3em;
+             border-radius: 0.3em;
+             border-left-style: solid;
+             padding: 8px;
+             ">
+            <div>{{ event.begin | convert_date_time('%Y-%m-%dT%H:%M:%S.%f0', '%-H:%M')}}</div>
+            <div class="w3-large" style="padding-right: 8px">{{ event.name }}</div>
+        </div>
+        {{ get_icon(event) }}
+    </div>
+{%- endmacro %}
+
+<style>
+</style>
+<div>{{msg}}</div>
+{% if events is defined %}
+    <div class="w3-round-large" style="padding:8px; height:100%; ; opacity:80%">
+        <div class="w3-cell-row">
+        {{ agenda_day_header(events, weather, 0) }}
+        {{ agenda_day_header(events, weather, 1) }}
+        {{ agenda_day_header(events, weather, 2) }}
+        {{ agenda_day_header(events, weather, 3) }}
+        {{ agenda_day_header(events, weather, 4) }}
+        </div>
+        <div style="max-height: 100%; overflow-y: scroll;">
+            {{ all_day_events(events, 0) }}
+            {{ all_day_events(events, 1) }}
+            {{ all_day_events(events, 2) }}
+            {{ all_day_events(events, 3) }}
+            {{ all_day_events(events, 4) }}
+            <div class="w3-cell-row">
+                {{ agenda_day(events, 0) }}
+                {{ agenda_day(events, 1) }}
+                {{ agenda_day(events, 2) }}
+                {{ agenda_day(events, 3) }}
+                {{ agenda_day(events, 4) }}
+            </div>
+        </div>
+    </div>
+{% endif %}

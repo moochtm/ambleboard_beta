@@ -25,6 +25,10 @@ gmqtt = "*"
 ics = "*"
 nest-asyncio = "*"
 arrow = "*"
+beautifulsoup4 = "*"
+icalendar = "*"
+recurring-ical-events = "*"
+ical = "*"
 
 [dev-packages]
 
