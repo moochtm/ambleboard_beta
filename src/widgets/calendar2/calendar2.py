@@ -43,6 +43,10 @@ class Widget(BaseWidget):
                     event["color"] = color
                 self.context["events"].extend(events)
 
+        self.context["events"] = sorted(
+            self.context["events"], key=lambda x: x["begin"]
+        )
+
         for w in [w for w in self.data.keys() if "weather" in w]:
             self.context["weather"] = self.data[w]["data"]
 

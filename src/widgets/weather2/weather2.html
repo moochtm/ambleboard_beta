@@ -1,19 +1,20 @@
+
 <div class="w3-container w3-round-large black-opacity-max w3-padding">
     <div>{{msg}}</div>
     <div class="w3-cell-row">
         {% if currentConditions is defined %}
-        <div class="w3-cell" style="vertical-align:middle">
+        <div class="" style="vertical-align:middle">
             <div style="font-size:3vw; padding:20%" >{{currentConditions.temp}}°<img src="/static/weather_icons/3-svg-mono-white/{{currentConditions.icon}}.svg"></div>
             <div>{{currentConditions.conditions}}</div>
             <div>Feels like {{currentConditions.feelslike}}°</div>
         </div>
         {% endif %}
-        <div class="w3-cell" style="vertical-align:middle; border-left:1px solid rgba(255,255,255,0.2)">
-            <div class="w3-cell-row">
+        <div class="" style="vertical-align:middle; border-left:1px solid rgba(255,255,255,0.2)">
+            <div class="">
                 {% if days is defined %}
                 {% for n in range(5) %}
 
-                <div class="w3-cell w3-center">
+                <div class="">
                     <div class="">{{days[n].datetime | convert_date_time('%Y-%m-%d', '%a')}}</div>
                     <div style="padding:20%"><img src="/static/weather_icons/3-svg-mono-white/{{days[n].icon}}.svg"></div>
                         <div>{{days[n].tempmax}}° - {{days[n].tempmin}}°</div>

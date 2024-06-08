@@ -54,7 +54,9 @@ class Widget:
         self._kwargs = {new_keys[key]: value for key, value in kwargs.items()}
 
         self._refresh_interval = (
-            kwargs["data_refresh_interval"] if "data_refresh_interval" in kwargs else 0
+            self._kwargs["data_refresh_interval"]
+            if "data_refresh_interval" in self._kwargs
+            else 0
         )
 
         # Find and load the template HTML for the Widget
@@ -119,12 +121,10 @@ class Widget:
                 )
 
             while True:
-                await asyncio.sleep(0)
-            # while True:
-            #     if self.update_on_refresh_interval:
-            #         self.update_context()
-            #         await self.__render_widget_html_and_send_to_server_queue()
-            #     await asyncio.sleep(self._refresh_interval)
+                await asyncio.sleep(int(self._refresh_interval))
+                if self.update_on_refresh_interval:
+                    self.update_context()
+                    await self.__render_widget_html_and_send_to_server_queue()
         except asyncio.CancelledError:
             logger.info(f"{type(self).type} stopping widget")
             # for client in self.mqtt_clients:
