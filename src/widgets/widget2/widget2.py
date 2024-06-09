@@ -121,10 +121,10 @@ class Widget:
                 )
 
             while True:
-                await asyncio.sleep(int(self._refresh_interval))
                 if self.update_on_refresh_interval:
                     self.update_context()
                     await self.__render_widget_html_and_send_to_server_queue()
+                await asyncio.sleep(int(self._refresh_interval))
         except asyncio.CancelledError:
             logger.info(f"{type(self).type} stopping widget")
             # for client in self.mqtt_clients:
