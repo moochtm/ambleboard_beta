@@ -80,9 +80,9 @@ img.bg {
 <div>{{msg}}</div>
 {% if current_item is defined %}
 
-<img class="bg vignette" src="{{ current_item.url }}">
-<img class="fade-in bg vignette" src="{{ next_item.url }}">
+<img id="preload" class="bg vignette" style="visibility: hidden" src="{{ preload_item.url }}">
+<img id="current" class="bg vignette" src="{{ current_item.url }}">
+<img id="next" class="fade-in bg vignette" src="{{ next_item.url }}">
 <div class="vignette"></div>
-
 
 {% endif %}

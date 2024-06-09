@@ -35,9 +35,6 @@ class Widget(BaseWidget):
                     if color_key in self._kwargs.keys()
                     else "#ffffff"
                 )
-                print("???????????????????????????????????")
-                print(cal)
-                print(events)
                 for event in events:
                     event["calendar"] = self._kwargs[cal]
                     event["color"] = color

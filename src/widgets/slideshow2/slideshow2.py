@@ -17,37 +17,34 @@ logger = logging.getLogger(__name__)
 
 class Widget(BaseWidget):
     type = "slideshow"
-    update_on_mqtt_message = True
+    update_on_mqtt_message = False
     update_on_refresh_interval = True
 
     def update_context(self):
-        if "current_item" not in self.context.keys():
-            self.context["current_item"] = {"url": None}
-        if "next_item" not in self.context.keys():
-            self.context["next_item"] = {"url": None}
-        print(self.context)
-
         try:
             data = self.data["data_source_topic"]["data"]
             print(data)
-            if self.context["next_item"]["url"] is not None:
-                self.context["current_item"][
-                    "url"
-                ] = f"http://{self.host}:8888/unsafe/2160x1600/smart/{self.context['next_item']['url']}"
-            else:
-                n = random.randrange(0, len(data))
-                self.context["current_item"][
-                    "url"
-                ] = f"http://{self.host}:8888/unsafe/2160x1600/smart/{data[n]['url']}"
 
+            for item in ["current_item", "next_item", "preload_item"]:
+                if item not in self.context.keys():
+                    n = random.randrange(0, len(data))
+                    self.context[item] = {
+                        "url": f"http://{self.host}:8888/unsafe/2160x1600/smart/{data[n]['url']}"
+                    }
+            print(self.context)
+
+            self.context["current_item"] = self.context["next_item"]
+            self.context["next_item"] = self.context["preload_item"]
             n = random.randrange(0, len(data))
-            self.context["next_item"][
-                "url"
-            ] = f"http://{self.host}:8888/unsafe/2160x1600/smart/{data[n]['url']}"
+            self.context["preload_item"] = {
+                "url": f"http://{self.host}:8888/unsafe/2160x1600/smart/{data[n]['url']}"
+            }
+
+            print("????????????????????????????????????????????????????????")
+            print(self.context)
+
         except Exception as e:
             print("main exception: ", e)
-
-        print(self.context)
 
 
 if __name__ == "__main__":
