@@ -58,6 +58,7 @@ class Widget:
             if "data_refresh_interval" in self._kwargs
             else 0
         )
+        self._first_message_sent = False
 
         # Find and load the template HTML for the Widget
         m = importlib.import_module(self.__module__)
@@ -143,7 +144,7 @@ class Widget:
             # do the work
             logger.info(f"widget worker received message: {payload}")
             self.data[payload["data_source_id"]] = payload
-            if self.update_on_mqtt_message:
+            if self.update_on_mqtt_message or self._first_message_sent == False:
                 self.update_context()
                 await self.__render_widget_html_and_send_to_server_queue()
 
@@ -178,6 +179,7 @@ class Widget:
             f"{type(self).type} instance sending payload to subscription queue: {payload}"
         )
         await self._queue.put(json.dumps(payload))
+        self._first_message_sent = True
 
     ########################################################################
     # JINJA2 FILTERS
