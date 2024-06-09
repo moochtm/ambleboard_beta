@@ -122,7 +122,7 @@ class Widget:
                 )
 
             while True:
-                if self.update_on_refresh_interval:
+                if self.update_on_refresh_interval and self.data is not {}:
                     self.update_context()
                     await self.__render_widget_html_and_send_to_server_queue()
                 await asyncio.sleep(int(self._refresh_interval))
