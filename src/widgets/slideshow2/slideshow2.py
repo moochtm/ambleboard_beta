@@ -31,15 +31,23 @@ class Widget(BaseWidget):
             data = self.data["data_source_topic"]["data"]
             print(data)
             if self.context["next_item"]["url"] is not None:
-                self.context["current_item"]["url"] = self.context["next_item"]["url"]
+                self.context["current_item"][
+                    "url"
+                ] = f"http://{self.host}:8888/unsafe/2160x1600/smart/{self.context['next_item']['url']}"
             else:
                 n = random.randrange(0, len(data))
-                self.context["current_item"]["url"] = data[n]["url"]
+                self.context["current_item"][
+                    "url"
+                ] = f"http://{self.host}:8888/unsafe/2160x1600/smart/{data[n]['url']}"
 
             n = random.randrange(0, len(data))
-            self.context["next_item"]["url"] = data[n]["url"]
+            self.context["next_item"][
+                "url"
+            ] = f"http://{self.host}:8888/unsafe/2160x1600/smart/{data[n]['url']}"
         except Exception as e:
             print("main exception: ", e)
+
+        print(self.context)
 
 
 if __name__ == "__main__":
