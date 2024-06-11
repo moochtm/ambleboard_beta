@@ -40,12 +40,23 @@ class DataSource(BaseDataSource):
                 if start.format("YYYY-MM-DD") != end.format("YYYY-MM-DD")
                 else False
             )
+
+            duration_days = (
+                arrow.get(end.format("YYYY-MM-DD"))
+                - arrow.get(start.format("YYYY-MM-DD"))
+            ).days
+            if end != arrow.get(end.format("YYYY-MM-DD")):
+                duration_days = duration_days + 1
+
             active_days = [start.format("YYYY-MM-DD")]
-            if all_day:
+            if duration_days > 1:
+                print(summary, duration_days, start)
                 current_d = start
-                while current_d.format("YYYY-MM-DD") != end.format("YYYY-MM-DD"):
+                for i in range(duration_days - 1):
                     current_d = current_d.shift(days=+1)
+                    # if not (current_d == arrow.get(current_d.format("YYYY-MM-DD"))):
                     active_days.append(current_d.format("YYYY-MM-DD"))
+                    print(current_d.format("YYYY-MM-DD"))
 
             data.append(
                 {
@@ -53,7 +64,7 @@ class DataSource(BaseDataSource):
                     "begin": start.format(),
                     "end": end.format(),
                     "all-day": all_day,
-                    "duration_days": (end - start).days,
+                    "duration_days": duration_days,
                     "active_days": active_days,
                     "description": description,
                     "location": location,
