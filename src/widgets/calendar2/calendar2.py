@@ -29,7 +29,6 @@ class Widget(BaseWidget):
             if events is not None:
                 postfix = cal[-2:]
                 color_key = "data_color" + postfix
-                print(self._kwargs[color_key])
                 color = (
                     self._kwargs[color_key]
                     if color_key in self._kwargs.keys()

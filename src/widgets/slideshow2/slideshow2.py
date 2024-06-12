@@ -1,6 +1,7 @@
 from src.widgets.widget2.widget2 import Widget as BaseWidget
 import sys
 import random
+import urllib.parse
 
 import logging
 
@@ -17,13 +18,12 @@ logger = logging.getLogger(__name__)
 
 class Widget(BaseWidget):
     type = "slideshow"
-    update_on_mqtt_message = False
-    update_on_refresh_interval = True
+    update_on_refresh_interval = False
+    update_on_mqtt_message = True
 
     def update_context(self):
         try:
             data = self.data["data_source_topic"]["data"]
-            print(data)
 
             for item in ["current_item", "next_item", "preload_item"]:
                 if item not in self.context.keys():
@@ -31,13 +31,12 @@ class Widget(BaseWidget):
                     self.context[item] = {
                         "url": f"http://{self.host}:8888/unsafe/2160x1600/smart/{data[n]['url']}"
                     }
-            print(self.context)
 
             self.context["current_item"] = self.context["next_item"]
             self.context["next_item"] = self.context["preload_item"]
             n = random.randrange(0, len(data))
             self.context["preload_item"] = {
-                "url": f"http://{self.host}:8888/unsafe/2160x1600/smart/{data[n]['url']}"
+                "url": f"http://{self.host}:8888/unsafe/2160x1600/smart/{urllib.parse.quote_plus(data[n]['url'])}"
             }
 
             print("????????????????????????????????????????????????????????")

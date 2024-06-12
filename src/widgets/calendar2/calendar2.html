@@ -55,107 +55,94 @@ td {width: 20%; vertical-align: top; }
 }
 </style>
 
-{% macro agenda_day_header(events, weather, offset_days) -%}
+{%-macro agenda_day_header(events, weather, offset_days) -%}
 <td>
     <table style="width:100%">
         <tr>
             <td style="width:60%">
                 <div class="day">
-                    {{ ""|today(out_format="%a", offset_days=offset_days) }}
+                   {{-""|today(out_format="%a", offset_days=offset_days) -}}
                 </div>
                  <div class="date">
-                    {{ ""|today(out_format="%-d %b", offset_days=offset_days) }}
+                   {{-""|today(out_format="%-d-%b", offset_days=offset_days) -}}
                 </div>
             </td>
             <td rowspan=2 style="padding:5px 30px 0px 0px; width:40%; vertical-align:middle; text-align:center">
+                {%-if weather is defined-%}
                 <img style="max-height: 3.5vh;" src="/static/weather_icons/3-svg-mono-white/{{weather.days[offset_days+1].icon}}.svg">
                 <div class="temperature">
-                    {{weather.days[offset_days+1].tempmax}}°<br>{{weather.days[offset_days+1].tempmin}}°
+                   {{-weather.days[offset_days+1].tempmax}}°<br>{{weather.days[offset_days+1].tempmin}}°
                 </div>
+                {%-endif-%}
             </td>
         </tr>
     </table>
 </td>
-{%- endmacro %}
+{%- endmacro-%}
 
-{% macro all_day_events(events, offset_days) -%}
-    {% for event in events %}
-        {% if (event['all-day'] == True) %}
-            <script>
-        console.log("{{''|today(offset_days=offset_days)}}");
-            </script>
-            {% if (offset_days == 0) and (""|today(offset_days=offset_days) in event.active_days) %}
-                {{ all_day_event(event, offset_days) }}
-            {% elif (""|today(offset_days=offset_days) == event.active_days[0]) %}
-                {{ all_day_event(event, offset_days) }}
-            {% endif %}
-        {% endif %}
-    {% endfor %}
-{%- endmacro %}
+{%-macro all_day_events(events, offset_days) -%}
+    {%-for event in events-%}
+        {%-if (event['all-day'] == True)-%}
+            {%-if (offset_days == 0) and (""|today(offset_days=offset_days) in event.active_days)-%}
+               {{-all_day_event(event, offset_days) -}}
+            {%-elif (""|today(offset_days=offset_days) == event.active_days[0])-%}
+               {{-all_day_event(event, offset_days) -}}
+            {%-endif-%}
+        {%-endif-%}
+    {%-endfor-%}
+{%- endmacro-%}
 
-{% macro all_day_event(event, offset_days) -%}
-<script>
-        console.log("{{event.name}}");
-</script>
+{%-macro all_day_event(event, offset_days) -%}
 <table style="width:100%">
 <tr id="all day events">
-    {% set remaining_days = {'count': 5} %}
-    <script>
-        console.log({{remaining_days.count}});
-    </script>
-{% for n in range(offset_days) %}
+    {%-set remaining_days = {'count': 5}-%}
+{%-for n in range(offset_days)-%}
     <td style="width:20%"></td>
-    {% set new_value = remaining_days.count - 1 %}
-    {% if remaining_days.update({'count': new_value}) %} {% endif %}
-    <script>
-        console.log({{remaining_days.count}});
-    </script>
-{% endfor %}
+    {%-set new_value = remaining_days.count - 1-%}
+    {%-if remaining_days.update({'count': new_value})-%} {%-endif-%}
+{%-endfor-%}
 
-    {% set all_day_width_days = (remaining_days.count|min(event.duration_days)) %}
-    {% set new_value = remaining_days.count - all_day_width_days %}
-    {% if remaining_days.update({'count': new_value}) %} {% endif %}
+    {%-set all_day_width_days = (remaining_days.count|min(event.duration_days))-%}
+    {%-set new_value = remaining_days.count - all_day_width_days-%}
+    {%-if remaining_days.update({'count': new_value})-%} {%-endif-%}
     <td style="width:{{ all_day_width_days * 20 }}%" >
         <div class="all-day-event title">{{ event.name }}</div>
     </td>
-    <script>
-        console.log({{remaining_days.count}});
-    </script>
-    {% for n in range(remaining_days.count) %}
+    {%-for n in range(remaining_days.count)-%}
     <td style="width:20%"></td>
-    {% endfor %}
+    {%-endfor-%}
 </tr>
 </table>
-{%- endmacro %}
+{%- endmacro-%}
 
-{% macro get_icon(event) -%}
-    {% set icon = "" %}
-    {% if 'birthday' in event.name.lower() %}{% set icon = 'fal fa-birthday-cake' %}{% endif %}
-    {% if 'swimming' in event.name.lower() %}{% set icon = 'fal fa-swimming-pool' %}{% endif %}
-    {% if 'rondo' in event.calendar.lower() %}{% set icon = 'fal fa-music' %}{% endif %}
-    {% if 'choir' in event.name.lower() %}{% set icon = 'fal fa-music' %}{% endif %}
-    {% if 'football' in event.name.lower() %}{% set icon = 'fal fa-futbol' %}{% endif %}
-    {% if 'tutor' in event.name.lower() %}{% set icon = 'fal fa-user-graduate' %}{% endif %}
-    {% if 'call' in event.name.lower() %}{% set icon = 'fal fa-phone' %}{% endif %}
-    {% if 'sailing' in event.name.lower() %}{% set icon = 'fal fa-anchor' %}{% endif %}
-    {% if icon != "" %}
+{%-macro get_icon(event) -%}
+    {%-set icon = ""-%}
+    {%-if 'birthday' in event.name.lower()-%}{%-set icon = 'fal fa-birthday-cake'-%}{%-endif-%}
+    {%-if 'swimming' in event.name.lower()-%}{%-set icon = 'fal fa-swimming-pool'-%}{%-endif-%}
+    {%-if 'rondo' in event.calendar.lower()-%}{%-set icon = 'fal fa-music'-%}{%-endif-%}
+    {%-if 'choir' in event.name.lower()-%}{%-set icon = 'fal fa-music'-%}{%-endif-%}
+    {%-if 'football' in event.name.lower()-%}{%-set icon = 'fal fa-futbol'-%}{%-endif-%}
+    {%-if 'tutor' in event.name.lower()-%}{%-set icon = 'fal fa-user-graduate'-%}{%-endif-%}
+    {%-if 'call' in event.name.lower()-%}{%-set icon = 'fal fa-phone'-%}{%-endif-%}
+    {%-if 'sailing' in event.name.lower()-%}{%-set icon = 'fal fa-anchor'-%}{%-endif-%}
+    {%-if icon != ""-%}
     <i class="{{icon}}" style="margin: 5px 5px 0px 0px; font-size: 1.5vw"></i>
-    {% endif %}
-{%- endmacro %}
+    {%-endif-%}
+{%- endmacro-%}
 
-{% macro agenda_day(events, offset_days) -%}
+{%-macro agenda_day(events, offset_days) -%}
 <td>
-    {% for event in events %}
-        {% if ""|today(offset_days=offset_days) in event.begin %}
-            {% if event['all-day'] == False %}
-                {{ agenda_event(event) }}
-            {% endif %}
-        {% endif %}
-    {% endfor %}
+    {%-for event in events -%}
+        {%-if ""|today(offset_days=offset_days) in event.begin-%}
+            {%-if event['all-day'] == False-%}
+               {{-agenda_event(event) -}}
+            {%-endif-%}
+        {%-endif-%}
+    {%- endfor-%}
  </td>
-{%- endmacro %}
+{%- endmacro-%}
 
-{% macro agenda_event(event) -%}
+{%-macro agenda_event(event) -%}
 <div class="event">
     <table style="width:100%">
         <tr>
@@ -169,40 +156,40 @@ td {width: 20%; vertical-align: top; }
         </tr>
     </table>
 </div>
-{%- endmacro %}
+{%- endmacro-%}
 
 
 <div class="container" style="height:100%">
     <div>{{msg}}</div>
-    {% if events is defined %}
+    {%-if events is defined-%}
     <div class="child noflex">
         <table style="width:100%">
             <tr>
-                {{ agenda_day_header(events, weather, 0) }}
-                {{ agenda_day_header(events, weather, 1) }}
-                {{ agenda_day_header(events, weather, 2) }}
-                {{ agenda_day_header(events, weather, 3) }}
-                {{ agenda_day_header(events, weather, 4) }}
+               {{-agenda_day_header(events, weather, 0) -}}
+               {{-agenda_day_header(events, weather, 1) -}}
+               {{-agenda_day_header(events, weather, 2) -}}
+               {{-agenda_day_header(events, weather, 3) -}}
+               {{-agenda_day_header(events, weather, 4) -}}
             </tr>
         </table>
     </div>
     <div class="child noflex">
-            {{ all_day_events(events, 0) }}
-            {{ all_day_events(events, 1) }}
-            {{ all_day_events(events, 2) }}
-            {{ all_day_events(events, 3) }}
-            {{ all_day_events(events, 4) }}
+           {{-all_day_events(events, 0) -}}
+           {{-all_day_events(events, 1) -}}
+           {{-all_day_events(events, 2) -}}
+           {{-all_day_events(events, 3) -}}
+           {{-all_day_events(events, 4) -}}
     </div>
     <div class="child flex">
         <table style="width:100%">
             <tr>
-                {{ agenda_day(events, 0) }}
-                {{ agenda_day(events, 1) }}
-                {{ agenda_day(events, 2) }}
-                {{ agenda_day(events, 3) }}
-                {{ agenda_day(events, 4) }}
+               {{-agenda_day(events, 0) -}}
+               {{-agenda_day(events, 1) -}}
+               {{-agenda_day(events, 2) -}}
+               {{-agenda_day(events, 3) -}}
+               {{-agenda_day(events, 4) -}}
             </tr>
         </table>
     </div>
 </div>
-{% endif %}
+{%- endif -%}

@@ -16,6 +16,7 @@ import re
 import sys
 import traceback
 import arrow
+import python_strip_whitespace
 import uuid
 from bs4 import BeautifulSoup
 
@@ -160,6 +161,7 @@ class Widget:
             html = self.jinja2_template.render(self.context)
             # remove comments
             html = re.sub(r"<!--.*?-->", "", html, flags=re.DOTALL)
+            html = python_strip_whitespace.minify_html(html)
             # remove new lines
             # html = html.strip("\n")
             # html = re.sub(r"[\n\t\s]*", "", html)
