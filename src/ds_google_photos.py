@@ -15,7 +15,7 @@ class DataSource(BaseDataSource):
     type = "google_photos"
     url = ""
     count = 0
-    wait_time = 30
+    wait_time = 60
 
     async def get_data(self):
 

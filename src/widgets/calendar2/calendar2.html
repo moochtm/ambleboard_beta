@@ -55,30 +55,30 @@ td {width: 20%; vertical-align: top; }
 }
 </style>
 
-{%-macro agenda_day_header(events, weather, offset_days) -%}
+{%- macro agenda_day_header(events, weather, offset_days) -%}
 <td>
     <table style="width:100%">
         <tr>
             <td style="width:60%">
                 <div class="day">
-                   {{-""|today(out_format="%a", offset_days=offset_days) -}}
+                   {{- ""|today(out_format="%a", offset_days=offset_days) -}}
                 </div>
                  <div class="date">
-                   {{-""|today(out_format="%-d-%b", offset_days=offset_days) -}}
+                   {{- ""|today(out_format="%-d-%b", offset_days=offset_days) -}}
                 </div>
             </td>
             <td rowspan=2 style="padding:5px 30px 0px 0px; width:40%; vertical-align:middle; text-align:center">
-                {%-if weather is defined-%}
+                {%- if weather is defined -%}
                 <img style="max-height: 3.5vh;" src="/static/weather_icons/3-svg-mono-white/{{weather.days[offset_days+1].icon}}.svg">
                 <div class="temperature">
-                   {{-weather.days[offset_days+1].tempmax}}°<br>{{weather.days[offset_days+1].tempmin}}°
+                   {{weather.days[offset_days+1].tempmax}}°<br>{{weather.days[offset_days+1].tempmin}}°
                 </div>
-                {%-endif-%}
+                {%- endif -%}
             </td>
         </tr>
     </table>
 </td>
-{%- endmacro-%}
+{%- endmacro -%}
 
 {%-macro all_day_events(events, offset_days) -%}
     {%-for event in events-%}
